@@ -20,7 +20,8 @@ ProcessConfig = ANTLER
   Run = pMarineViewer	@ NewConsole = false
   Run = uProcessWatch @ NewConsole = false
   Run = pHelmIvP      @ NewConsole = false
-  //Run = pOdometry     @ NewConsole = false
+  Run = pOdometry     @ NewConsole = false
+  Run = pLogger       @ NewConsole = false
 }
 
 //------------------------------------------
@@ -150,3 +151,18 @@ ProcessConfig = pNodeReporter
 
   vessel_type = kayak
 }
+
+ProcessConfig = pOdometry
+{
+  app_logging = log
+
+}
+
+ ProcessConfig = pLogger
+ {
+   AppTick   = 8
+   CommsTick = 8
+
+   AsyncLog = true
+   WildCardLogging = true
+ }
