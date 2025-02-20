@@ -2,7 +2,7 @@
 /*    NAME: Stephen Bruno                                              */
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: Odometry.cpp                                        */
-/*    DATE: February 13th, 2025                             */
+/*    DATE: February 20th, 2025                             */
 /************************************************************/
 
 #include <iterator>
@@ -143,6 +143,7 @@ bool Odometry::OnStartUp()
   if(!m_MissionReader.GetConfiguration(GetAppName(), sParams))
     reportConfigWarning("No config block found for " + GetAppName());
 
+
   STRING_LIST::iterator p;
   for(p=sParams.begin(); p!=sParams.end(); p++) {
     string orig  = *p;
@@ -166,7 +167,6 @@ bool Odometry::OnStartUp()
 
   }
   
-  registerVariables();
   registerVariables();	
   return(true);
 }

@@ -151,10 +151,15 @@ ProcessConfig = pNodeReporter
 
   vessel_type = kayak
 }
-
+//-------------------------------------------
+//pOdometry
 ProcessConfig = pOdometry
 {
   app_logging = log
+
+  UPDATETIME = 3
+
+  ODOMETRY_UNITS = angstrom
 
 }
 
@@ -166,14 +171,3 @@ ProcessConfig = pOdometry
    AsyncLog = true
    WildCardLogging = true
  }
-
-//pOdometry config block
-
-ProcessConfig = pOdometry
-{
-  UPDATETIME = 3
-
-  ODOMETRY_UNITS = angstrom
-
-
-}
