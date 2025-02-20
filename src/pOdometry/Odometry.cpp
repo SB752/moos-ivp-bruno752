@@ -21,12 +21,13 @@ Odometry::Odometry()
   m_Xtarget = "NAV_X";
   m_Ytarget = "NAV_Y";
   m_current_time = 0;
-  m_previous_time = 0;
+  m_lastupdate_time = 0;
   m_current_x = 0;
   m_current_y = 0;
   m_previous_x = 0;
   m_previous_y = 0;
   m_total_distance = 0;
+  m_errorcheck_time = 10;
 }
 
 //---------------------------------------------------------
@@ -62,8 +63,9 @@ bool Odometry::OnNewMail(MOOSMSG_LIST &NewMail)
 
     if(key == m_Xtarget) 
       m_current_x = msg.GetDouble();
-    else if(key == m_Ytarget) 
+    else if(key == m_Ytarget) { 
       m_current_y = msg.GetDouble();
+     } 
     else if(key == "DB_TIME") {
       m_current_time = msg.GetDouble();
     }
@@ -94,18 +96,17 @@ bool Odometry::Iterate()
   AppCastingMOOSApp::Iterate();
   // Do your thing here!
 
-
   if(!m_first_reading){
+    if(m_current_x != m_previous_x && m_current_y != m_previous_y){
+      m_lastupdate_time = m_current_time;
+    }
       double distance = sqrt(pow(m_current_x - m_previous_x, 2) + pow(m_current_y - m_previous_y, 2));
       m_total_distance += distance;
       m_previous_x = m_current_x;
       m_previous_y = m_current_y;
 
       Notify("ODOMETRY_DIST", m_total_distance);
-      m_previous_time = m_current_time;
-
-
-
+      //m_previous_time = m_current_time;
 
     }else if(m_first_reading) {
       m_previous_x = m_current_x;
@@ -113,11 +114,13 @@ bool Odometry::Iterate()
       m_first_reading = false;
     }
 
-/*
-  if(m_current_time - m_previous_time > 10){
+//Runtime Warning for no new data
+  if(m_current_time - m_lastupdate_time > m_errorcheck_time){
     reportRunWarning("No new data in 10 seconds");
+  } else{
+    retractRunWarning("No new data in 10 seconds");
   }
-*/
+
 
   AppCastingMOOSApp::PostReport();
   return(true);
@@ -144,9 +147,11 @@ bool Odometry::OnStartUp()
     string value = line;
 
     bool handled = false;
-    if(param == "foo") {
+    if(param == "updatetime") { //Check for configuration parameter what time to wait before runtime warning
+      m_errorcheck_time = atof(value.c_str());
       handled = true;
     }
+
     else if(param == "bar") {
       handled = true;
     }
