@@ -44,6 +44,7 @@ class Odometry : public AppCastingMOOSApp
   double m_current_time;
   double m_lastupdate_time;
   double m_errorcheck_time;
+  std::string m_odometer_units;
 };
 
 #endif 

@@ -28,6 +28,7 @@ Odometry::Odometry()
   m_previous_y = 0;
   m_total_distance = 0;
   m_errorcheck_time = 10;
+  m_odometer_units = "default_unit";
 }
 
 //---------------------------------------------------------
@@ -69,6 +70,9 @@ bool Odometry::OnNewMail(MOOSMSG_LIST &NewMail)
     else if(key == "DB_TIME") {
       m_current_time = msg.GetDouble();
     }
+    else if (key == "ODOMETRY_UNITS") {
+      m_odometer_units = msg.GetString();
+    }
 
     else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
@@ -106,7 +110,7 @@ bool Odometry::Iterate()
       m_previous_y = m_current_y;
 
       Notify("ODOMETRY_DIST", m_total_distance);
-      //m_previous_time = m_current_time;
+      //Notify("ODOMETRY_UNITS", m_odometer_units);
 
     }else if(m_first_reading) {
       m_previous_x = m_current_x;
@@ -116,9 +120,9 @@ bool Odometry::Iterate()
 
 //Runtime Warning for no new data
   if(m_current_time - m_lastupdate_time > m_errorcheck_time){
-    reportRunWarning("No new data in 10 seconds");
+    reportRunWarning("No new data in some time");
   } else{
-    retractRunWarning("No new data in 10 seconds");
+    retractRunWarning("No new data in some time");
   }
 
 
@@ -152,7 +156,8 @@ bool Odometry::OnStartUp()
       handled = true;
     }
 
-    else if(param == "bar") {
+    else if(param == "odometry_units") {
+      m_odometer_units = value;
       handled = true;
     }
 
@@ -176,6 +181,7 @@ void Odometry::registerVariables()
   Register(m_Xtarget, 0);
   Register(m_Ytarget, 0);
   Register("DB_TIME", 0);
+  Register("ODOMETRY_UNITS", 0);
 }
 
 
@@ -185,7 +191,7 @@ void Odometry::registerVariables()
 bool Odometry::buildReport() 
 {
   m_msgs << "============================================" << endl;
-  m_msgs << "Distance Travelled: "<< m_total_distance << endl;
+  m_msgs << "Distance Travelled: "<< m_total_distance << " " << m_odometer_units << endl;
   m_msgs << "============================================" << endl;
 
 /*
