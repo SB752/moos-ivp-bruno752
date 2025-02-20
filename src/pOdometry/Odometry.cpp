@@ -1,8 +1,8 @@
 /************************************************************/
-/*    NAME: StephenBruno                                              */
+/*    NAME: Stephen Bruno                                              */
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: Odometry.cpp                                        */
-/*    DATE: December 29th, 1963                             */
+/*    DATE: February 13th, 2025                             */
 /************************************************************/
 
 #include <iterator>
