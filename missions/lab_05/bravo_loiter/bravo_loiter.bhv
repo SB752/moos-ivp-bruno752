@@ -1,0 +1,48 @@
+//-------------------------------------------------
+// NAME: Stephen Bruno
+// ORGN:Dept of Mechanical Eng, MIT Cambridge MA
+// FILE: bravo_loiter.bhv
+// DATE: 25FEB2025
+//-------------------------------------------------
+
+initialize   DEPLOY = false
+initialize   RETURN = false
+	
+//----------------------------------------------
+Behavior = BHV_Loiter
+{
+  name = Loiter
+  pwt = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  
+  clockwise = false
+  speed = 2.5
+  duration = 150
+  polygon = radial:: x=100,y=-75, radius = 30, pts=8
+
+  endflag = RETURN=true
+  perpetual = true
+}
+
+//----------------------------------------------
+Behavior=BHV_Waypoint
+{
+  name      = waypt_return
+  pwt       = 100
+  condition = RETURN = true
+  condition = DEPLOY = true
+  perpetual = true
+  updates   = RETURN_UPDATE
+  endflag   = RETURN = false
+  endflag   = DEPLOY = false
+  endflag   = MISSION = complete
+	
+           speed = 2.0
+  capture_radius = 2.0
+     slip_radius = 8.0
+          points = 0,0
+ }
+
+
+
