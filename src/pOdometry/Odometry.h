@@ -3,6 +3,7 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: Odometry.h                                          */
 /*    DATE: February 13th, 2025                             */
+/*    UPDATED: February 25th, 2025                           */
 /************************************************************/
 
 #ifndef Odometry_HEADER
@@ -32,8 +33,10 @@ class Odometry : public AppCastingMOOSApp
   bool m_first_reading;
   std::string m_Xtarget;
   std::string m_Ytarget;
-
-
+  double m_depth_thresh;
+  std::string m_odometer_units;
+  double m_errorcheck_time;
+  double m_objective_dist;
 
  private: // State variables
   double m_current_x;
@@ -43,8 +46,8 @@ class Odometry : public AppCastingMOOSApp
   double m_total_distance;
   double m_current_time;
   double m_lastupdate_time;
-  double m_errorcheck_time;
-  std::string m_odometer_units;
+  double m_current_depth;
+  double m_dist_at_depth;
 };
 
 #endif 

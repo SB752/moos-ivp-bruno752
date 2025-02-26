@@ -1,0 +1,117 @@
+//-------------------------------------------------
+// NAME: Stephen Bruno
+// ORGN:Dept of Mechanical Eng, MIT Cambridge MA
+// FILE: bravo_uuv_surface.bhv
+// DATE: 25FEB2025
+//-------------------------------------------------
+
+initialize   DEPLOY = false
+initialize   RETURN = false
+initialize   LOITER_REGION=west
+initialize   SURFACE_ACQ=false
+	
+//----------------------------------------------
+Behavior = BHV_Loiter
+{
+  name = Loiter_West
+  pwt = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = LOITER_REGION = west
+  condition = SURFACE_ACQ=false
+  
+  clockwise = false
+  speed = 2.5
+  duration = 150
+  duration_idle_decay = false
+  polygon = radial:: x=100,y=-75, radius = 30, pts=8
+
+  endflag = LOITER_REGION=east
+  perpetual = true
+}
+//----------------------------------------------
+Behavior = BHV_Loiter
+{
+  name = Loiter_East
+  pwt = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = LOITER_REGION = east
+  condition = SURFACE_ACQ = false
+  
+  clockwise = false
+  speed = 2.5
+  duration = 150
+  duration_idle_decay = false
+  polygon = radial:: x=160,y=-50, radius = 20, pts=8
+
+  endflag = LOITER_REGION=west
+  perpetual = true
+}
+
+//----------------------------------------------
+Behavior=BHV_Waypoint
+{
+  name      = waypt_return
+  pwt       = 100
+  condition = RETURN = true
+  condition = DEPLOY = true
+  perpetual = true
+  updates   = RETURN_UPDATE
+  endflag   = RETURN = false
+  endflag   = DEPLOY = false
+  endflag   = MISSION = complete
+	
+           speed = 2.0
+  capture_radius = 2.0
+     slip_radius = 8.0
+          points = 0,0
+ }
+
+//----------------------------------------------
+Behavior=BHV_ConstantDepth
+{
+  name      = const_depth
+  pwt       = 100
+
+  depth = 30
+
+  duration= 200
+  duration_idle_decay = false
+  endflag = SURFACE_ACQ=true
+
+  perpetual = true
+ }
+
+//----------------------------------------------
+Behavior=BHV_ConstantDepth
+{
+  name      = surfacing
+  pwt       = 100
+
+  condition = SURFACE_ACQ=true
+
+  depth = 0
+
+  duration= no-time-limit
+  duration_idle_decay = false
+
+ perpetual = true
+ }
+
+//----------------------------------------------
+Behavior=BHV_Timer
+{
+  name      = surface_timer
+  pwt       = 100
+
+  condition = SURFACE_ACQ=true
+  condition = (NAV_DEPTH = 0)
+
+
+  duration= 60
+  duration_idle_decay = false
+  endflag = SURFACE_ACQ=false
+
+ perpetual = true
+ }

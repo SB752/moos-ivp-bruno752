@@ -3,6 +3,7 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: Odometry.cpp                                        */
 /*    DATE: February 20th, 2025                             */
+/*    UPDATED: February 25th, 2025                           */
 /************************************************************/
 
 #include <iterator>
@@ -29,6 +30,9 @@ Odometry::Odometry()
   m_total_distance = 0;
   m_errorcheck_time = 10;
   m_odometer_units = "default_unit";
+  m_depth_thresh = 0;
+  m_current_depth = 0;
+  m_dist_at_depth = 0;
 }
 
 //---------------------------------------------------------
@@ -73,6 +77,21 @@ bool Odometry::OnNewMail(MOOSMSG_LIST &NewMail)
     else if (key == "ODOMETRY_UNITS") {
       m_odometer_units = msg.GetString();
     }
+    else if (key == "NAV_DEPTH") {
+      m_current_depth = msg.GetDouble();
+    }
+    else if (key == "DEPTH_THRESH"){
+      m_depth_thresh = msg.GetDouble();
+    }
+    else if (key == "OBJECTIVE_DIST"){
+      m_objective_dist = msg.GetDouble();
+    }
+
+    else if (key == "APPCAST_REQ")  // handled by AppCastingMOOSApp
+    {
+      /* code */
+    }
+    
 
     else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
@@ -86,7 +105,6 @@ bool Odometry::OnNewMail(MOOSMSG_LIST &NewMail)
 
 bool Odometry::OnConnectToServer()
 {
-   registerVariables();
    registerVariables();
    return(true);
 }
@@ -106,11 +124,16 @@ bool Odometry::Iterate()
     }
       double distance = sqrt(pow(m_current_x - m_previous_x, 2) + pow(m_current_y - m_previous_y, 2));
       m_total_distance += distance;
+      if(m_current_depth > m_depth_thresh){
+        m_dist_at_depth += distance;
+      }
       m_previous_x = m_current_x;
       m_previous_y = m_current_y;
 
       Notify("ODOMETRY_DIST", m_total_distance);
       //Notify("ODOMETRY_UNITS", m_odometer_units);
+      Notify("ODOMETRY_DIST_AT_DEPTH", m_dist_at_depth);
+      Notify("OBJECTIVE_DIST", m_objective_dist);
 
     }else if(m_first_reading) {
       m_previous_x = m_current_x;
@@ -162,6 +185,15 @@ bool Odometry::OnStartUp()
       handled = true;
     }
 
+    else if(param == "depth_thresh") {
+      m_depth_thresh = atof(value.c_str());
+      handled = true;
+    }
+    else if(param == "objective_dist"){
+      m_objective_dist = atof(value.c_str());
+      handled = true;
+    }
+
     if(!handled)
       reportUnhandledConfigWarning(orig);
 
@@ -182,6 +214,9 @@ void Odometry::registerVariables()
   Register(m_Ytarget, 0);
   Register("DB_TIME", 0);
   Register("ODOMETRY_UNITS", 0);
+  Register("NAV_DEPTH", 0);
+  Register("DEPTH_THRESH", 0);
+  Register("OBJECTIVE_DIST",0);
 }
 
 
@@ -192,15 +227,9 @@ bool Odometry::buildReport()
 {
   m_msgs << "============================================" << endl;
   m_msgs << "Distance Travelled: "<< m_total_distance << " " << m_odometer_units << endl;
+  m_msgs << "Distance Travelled at Depth: " << m_dist_at_depth << " " << m_odometer_units << endl;
   m_msgs << "============================================" << endl;
 
-/*
-  ACTable actab(4);
-  actab << "Alpha | Bravo | Charlie | Delta";
-  actab.addHeaderLines();
-  actab << "one" << "two" << "three" << "four";
-  m_msgs << actab.getFormattedString();
-*/
   return(true);
 }
 
