@@ -1,12 +1,12 @@
 //-------------------------------------------------
 // NAME: Stephen Bruno
-// FILE: alpha_shoreside.moos
+// FILE: shoreside.moos
 // DATE: 27FEB2025
 //-------------------------------------------------
 
 ServerHost   = localhost
 ServerPort   = 9000
-Community    = alpha_shoreside
+Community    = shoreside
 MOOSTimeWarp = 1
 
 // Forest Lake
@@ -26,7 +26,6 @@ ProcessConfig = ANTLER
   Run = MOOSDB        @ NewConsole = false
   Run = uProcessWatch	@ NewConsole = false
   Run = pMarineViewer	@ NewConsole = false
-  //Run = pNodeReporter	@ NewConsole = false
   Run = pRealm	      @ NewConsole = false
   Run = pShare        @ NewConsole = false
 }
@@ -112,19 +111,15 @@ ProcessConfig = pMarineViewer
   action+ = MENU_KEY=deploy # MOOS_MANUAL_OVERRIDE=false
   action  = RETURN=true
   action  = UPDATES_RETURN=speed=1.4
-}
 
-//------------------------------------------
-// pNodeReporter config block
+  action = MENU_KEY=DEPLOY_ALPHA # DEPLOY_ALPHA=true  
+  action+ = MENU_KEY=DEPLOY_ALPHA # MOOS_MANUAL_OVERRIDE_ALPHA=false
+  action+ = MENU_KEY=DEPLOY_ALPHA # RETURN_ALPHA = false
 
-ProcessConfig = pNodeReporter
-{
-  AppTick    = 2
-  CommsTick	 = 2
+  action = MENU_KEY= DEPLOY_BRAVO # DEPLOY_BRAVO=true
+  action+ = MENU_KEY=DEPLOY_BRAVO # MOOS_MANUAL_OVERRIDE_BRAVO=false
+  action+ = MENU_KEY=DEPLOY_BRAVO # RETURN_BRAVO = false
 
-  platform_type   = kayak
-  platform_color  = yellow
-  platform_length = 4
 }
 
 //------------------------------------------
@@ -136,8 +131,18 @@ ProcessConfig = pShare
   CommsTick = 4
 
   input = route = localhost:9200
+
+  output = src_name=DEPLOY_ALPHA, dest_name=DEPLOY, route = localhost:9201  
   output = src_name=DEPLOY, dest_name=DEPLOY, route = localhost:9201
-  output = src_name=RETURN, dest_name=RETURN, route = localhost:9201
+  output = src_name=RETURN_ALPHA, dest_name=RETURN, route = localhost:9201   
+  output = src_name=RETURN, dest_name=RETURN ,route = localhost:9201
+  output = src_name=MOOS_MANUAL_OVERRIDE_ALPHA, dest_name=MOOS_MANUAL_OVERRIDE,route = localhost:9201  
   output = src_name=MOOS_MANUAL_OVERRIDE, dest_name=MOOS_MANUAL_OVERRIDE,route = localhost:9201
 
+  output = src_name=DEPLOY_BRAVO, dest_name=DEPLOY, route = localhost:9202
+  output = src_name=DEPLOY, dest_name=DEPLOY ,route = localhost:9202
+  output = src_name=RETURN_BRAVO, dest_name=RETURN, route = localhost:9202
+  output = src_name=RETURN, dest_name=RETURN, route = localhost:9202
+  output = src_name=MOOS_MANUAL_OVERRIDE_BRAVO, dest_name=MOOS_MANUAL_OVERRIDE,route = localhost:9202
+  output = src_name=MOOS_MANUAL_OVERRIDE, dest_name=MOOS_MANUAL_OVERRIDE,route = localhost:9202
 }

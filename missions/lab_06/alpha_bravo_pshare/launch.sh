@@ -1,12 +1,12 @@
 #!/bin/bash -e
 #----------------------------------------------------------
 #  Script: launch.sh
-#  Author: Michael Benjamin
-#  LastEd: May 20th 2019
+#  Author: Stephen Bruno
+#  Date:   27FEB2025
 #----------------------------------------------------------
 #  Part 1: Set Exit actions and declare global var defaults
 #----------------------------------------------------------
-TIME_WARP=1
+TIME_WARP=10
 #COMMUNITY="alpha"
 GUI="yes"
 
@@ -33,11 +33,11 @@ done
 #  Part 3: Launch the processes
 #----------------------------------------------------------
 #echo "Launching $COMMUNITY MOOS Community with WARP:" $TIME_WARP
+#pAntler $COMMUNITY.moos --MOOSTimeWarp=$TIME_WARP >& /dev/null &
 
-pAntler alpha_shoreside.moos --MOOSTimeWarp=$TIME_WARP >& /dev/null &
+pAntler shoreside.moos --MOOSTimeWarp=$TIME_WARP >& /dev/null &
+pAntler alpha.moos --MOOSTimeWarp=$TIME_WARP >& /dev/null &
+pAntler bravo.moos --MOOSTimeWarp=$TIME_WARP >& /dev/null &
 
-pAntler alpha_vehicle.moos --MOOSTimeWarp=$TIME_WARP >& /dev/null &
-
-
-uMAC -t alpha_shoreside.moos
+uMAC -t shoreside.moos
 kill -- -$$

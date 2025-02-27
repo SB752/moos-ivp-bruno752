@@ -1,12 +1,12 @@
 //-------------------------------------------------
 // NAME: Stephen Bruno
-// FILE: alpha_vehicle.moos
+// FILE: bravo.moos
 // DATE: 27FEB2025
 //-------------------------------------------------
 
 ServerHost   = localhost
-ServerPort   = 9001
-Community    = alpha_vehicle
+ServerPort   = 9002
+Community    = bravo
 MOOSTimeWarp = 1
 
 // Forest Lake
@@ -83,7 +83,7 @@ ProcessConfig = uSimMarineV22
   AppTick  	= 4
   CommsTick	= 4
 
-  start_pos     = x=0, y=-20, heading=180, speed=0
+  start_pos     = x=50, y=-40, heading=180, speed=0
   prefix        = NAV
   turn_rate     = 95
   thrust_map    = 0:0, 20:1, 40:2, 60:3, 80:4, 100:5
@@ -98,7 +98,7 @@ ProcessConfig = pHelmIvP
   AppTick    = 4
   CommsTick  = 4
 
-  behaviors  = alpha.bhv
+  behaviors  = bravo.bhv
   domain     = course:0:359:360
   domain     = speed:0:4:41
 }
@@ -146,7 +146,7 @@ ProcessConfig = pNodeReporter
   CommsTick	 = 2
 
   platform_type   = kayak
-  platform_color  = yellow
+  platform_color  = red
   platform_length = 4
 }
 
@@ -158,7 +158,7 @@ ProcessConfig = pShare
   AppTick = 4
   CommsTick = 4
 
-  input = route = localhost:9201
+  input = route = localhost:9202
   output = src_name=NODE_REPORT_LOCAL, dest_name=NODE_REPORT, route = localhost:9200
   output = src_name=VIEW_POLYGON, dest_name=VIEW_POLYGON, route = localhost:9200
   output = src_name=VIEW_SEGLIST, dest_name=VIEW_SEGLIST, route = localhost:9200 
