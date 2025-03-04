@@ -107,3 +107,18 @@ Behavior = BHV_Timer
   endflag   = LOITER = true
   perpetual = true
 }
+
+//----------------------------------------------
+Behavior = BHV_Timer
+{
+  name      = timer_remaining_fuel
+  pwt       = 100
+  condition = MODE==LOITERING
+  duration  = 300
+  duration_idle_decay=false
+  
+  endflag   = REFUEL = true
+  endflag   = RETURN = true
+  endflag   = LOITER = false
+  perpetual = true
+}
