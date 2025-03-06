@@ -28,20 +28,26 @@ class PointAssign : public AppCastingMOOSApp
 
  protected:
    void registerVariables();
-   void PointAssign::postViewPoint(double x, double y, string label, string color);
+   void postViewPoint(double x, double y, std::string label, std::string color);
 
  private: // Configuration variables
-  vector<string> m_ship_names;
-  vector<string> m_visit_points;
-  string m_assignment_method;
-  string m_start_flag;
-  string m_end_flag;
+  std::vector<std::string> m_ship_names;
+  std::vector<std::string> m_visit_points;
+  std::vector<std::vector<std::string>> m_ship_points;
+
+  std::string m_assignment_method;
+  std::string m_start_flag;
+  std::string m_end_flag;
 
  private: // State variables
  double m_ship_reg_time;
  double m_current_time;
  bool m_first_reading;
  bool m_last_reading;
+ bool m_point_pub_complete;
+
+ int trouble_counter;
+ int trouble_iterate;
 };
 
 #endif 

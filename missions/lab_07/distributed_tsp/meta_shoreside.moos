@@ -20,6 +20,7 @@ Processconfig = ANTLER
   Run = pHostInfo       @ NewConsole = false
   Run = uFldShoreBroker @ NewConsole = false
   Run = pRealm          @ NewConsole = false
+  Run = pPointAssign    @ NewConsole = false
   Run = uTimerScript    @ NewConsole = false
 }
 
@@ -83,8 +84,19 @@ ProcessConfig = pMarineViewer
   button_four = REFUEL  # RETURN_ALL=true # REFUEL_NEEDED_ALL=true # STATION_KEEP_ALL=false
 }
 
+//--------------------------------------------------------
+ProcessConfig = pPointAssign
+{
+
+
+  ship_list = gilda,henry
+}
+
+//--------------------------------------------------------
 ProcessConfig = uTimerScript
 {
+
+  delay_start = 10
   event = var=VISIT_POINT, val="firstpoint"
   event = var=VISIT_POINT, val="x=-25,y=-25,id=1"
   event = var=VISIT_POINT, val="x=-25,y=-175,id=2"

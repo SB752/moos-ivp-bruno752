@@ -19,6 +19,8 @@ PointAssign::PointAssign()
 {
   m_ship_names ={};
   m_visit_points = {};
+  m_ship_points;
+
   m_assignment_method = "default"; //Odds and evens or East/west
 
   m_ship_reg_time = 0;
@@ -28,6 +30,11 @@ PointAssign::PointAssign()
 
   m_first_reading = false;
   m_last_reading = false;
+
+  m_point_pub_complete = false;
+
+  trouble_counter = 0;
+  trouble_iterate = 0;
 }
 
 //---------------------------------------------------------
@@ -42,12 +49,14 @@ PointAssign::~PointAssign()
 
 bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
 {
+  Notify("RECIEVED","Hello!!!!!!!!!!");
   AppCastingMOOSApp::OnNewMail(NewMail);
 
   MOOSMSG_LIST::iterator p;
   for(p=NewMail.begin(); p!=NewMail.end(); p++) {
     CMOOSMsg &msg = *p;
     string key    = msg.GetKey();
+    Notify("RECIEVED",key);
 
 #if 0 // Keep these around just for template
     string comm  = msg.GetCommunity();
@@ -68,21 +77,26 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
     }*/ //^^Draft Code for autodetecting ships
 
     if(key == "VISIT_POINT") { //Collects visit points, stops collecting once end reached
-      if (msg.GetString() == m_start_flag) { //!!!!!!!CORRECT to possibly accept a new list later
+      m_visit_points.push_back(msg.GetString());
+      string whatismessage = msg.GetString();
+      Notify("LOOP", key);
+      Notify("BAD_MESSAGE", whatismessage);
+      trouble_counter++;
+      Notify("TROUBLE_COUNTER", trouble_counter);
+      string TBout = "vector_end"+std::to_string(trouble_counter);
+      Notify(TBout, m_visit_points[m_visit_points.size()-1]);
+      if (msg.GetString() == m_start_flag) {
         m_first_reading = true;
-        m_visit_points.push_back(msg.GetString());
-      } else if (msg.GetString()!= m_end_flag){
-        m_visit_points.push_back(msg.GetString());
       } else if (msg.GetString() == m_end_flag){
         m_last_reading = true;
-      } else {
-        reportRunWarning("Unhandled Mail: " + key);
       }
-    } // Add missing closing brace
+    }
 
+/*
     else if(key == "DB_TIME") {
       m_current_time = msg.GetDouble();
     }
+    */
     else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
    }
@@ -106,24 +120,30 @@ bool PointAssign::OnConnectToServer()
 bool PointAssign::Iterate()
 {
   AppCastingMOOSApp::Iterate();
+  Notify("ITERATE","Made it here");
+  #if 0
   //if(m_current_time - m_ship_reg_time > 10){ //To make sure enough time for all ships to register
 
-  if(m_last_reading){ //Don't want to interate until list is complete
+  if(m_last_reading && (!m_point_pub_complete)){ //Don't want to interate until list is complete
     retractRunWarning("Incomplete set of points provided");
 
     if(m_assignment_method == "default"){ //Default is alternate points, alt is East/West
       for(int i = 0; i < m_ship_names.size(); i++){ //Loop for Each Ship
-        Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[0]); //Publishes "firstpoint"
+        //Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[0]); //Publishes "firstpoint"
+        m_ship_points[i][0] = m_visit_points[0]; //Stores first point for each ship
   
         for(int j = 1; j < m_visit_points.size()-1; j++){ //Loop for list of points
-          if(j % m_ship_names.size() == 0){
-            Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[i]);
-          }
+          if(j % m_ship_names.size() == (i-1)){
+            //Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[j]);
+            m_ship_points[i][j] = m_visit_points[j];
+          } 
         }
 
-        Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[m_visit_points.size()-1]); //Publishes "lastpoint"
+        //Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[m_visit_points.size()-1]); //Publishes "lastpoint"
+        m_ship_points[i][m_visit_points.size()-1] = m_visit_points[m_visit_points.size()-1]; //Stores last point for each ship
       }
-    } else if(m_assignment_method == "false"){ //East West
+    }
+     /*else if(m_assignment_method == "false"){ //East West <- Not implemented yet
       int x_coord;
       int y_coord;
   
@@ -135,17 +155,18 @@ bool PointAssign::Iterate()
       }
     } else {
       reportRunWarning("Incomplete set of points provided ");
+    }*/
+  for(int i = 0; i < m_ship_names.size(); i++){
+      for(int j = 0; j < m_visit_points.size(); j++){
+        postViewPoint(0,0,m_ship_points[i][j],"label");
+        Notify("VISIT_POINT_"+ m_ship_names[i], m_ship_points[i][j]);
+      }
     }
-
+    m_point_pub_complete = true;
   }
-
-
-
-
-
-
-
-
+#endif
+  trouble_iterate++;
+  Notify("TROUBLE_ITERATE", trouble_iterate);
   AppCastingMOOSApp::PostReport();
   return(true);
 }
@@ -197,8 +218,8 @@ void PointAssign::registerVariables()
   AppCastingMOOSApp::RegisterVariables();
   // Register("FOOBAR", 0);
   Register("VISIT_POINT",0);
-  Register("NODE_REPORT",0);
-  Register("DB_TIME",0);
+  //Register("NODE_REPORT",0);
+  //Register("DB_TIME",0);
 
 }
 
@@ -209,7 +230,28 @@ void PointAssign::registerVariables()
 bool PointAssign::buildReport() 
 {
   m_msgs << "============================================" << endl;
-  m_msgs << "I did not Set Up Yet                        " << endl;
+  m_msgs << "Points Retrieved:                           " << endl;
+  for(int i = 0; i < m_visit_points.size(); i++){
+    m_msgs <<"["<<i<<"]" << m_visit_points[i] << endl;
+  }
+  m_msgs << "total points: "<< m_visit_points.size() << endl;
+  m_msgs << "trouble Mail Counter: "<< trouble_counter << endl;
+  m_msgs << "trouble Iterate: "<< trouble_iterate << endl;
+  m_msgs << "============================================" << endl;
+  m_msgs << "Ships Detected:                             " << endl;
+  for(int i = 0; i < m_ship_names.size(); i++){
+    m_msgs <<"["<<i<<"]: " << m_ship_names[i] << endl;
+  };
+  m_msgs << "============================================" << endl;
+  m_msgs << "Assignment Method: " << m_assignment_method << endl;
+  m_msgs << "============================================" << endl;
+  m_msgs << "Ship Assignments:                           " << endl;
+  for(int i = 0; i < m_ship_names.size(); i++){
+    m_msgs << "Ship: " << m_ship_names[i] << endl;
+    for(int j = 0; j < m_visit_points.size(); j++){
+      m_msgs << "["<<j<<"]" << m_ship_points[i][j] << endl;
+    }
+  }
   m_msgs << "============================================" << endl;
 
 /*
@@ -222,6 +264,7 @@ bool PointAssign::buildReport()
   return(true);
 }
 
+/*
 void PointAssign::postViewPoint(double x, double y, string label, string color){
   XYPoint point(x,y);
   point.set_label(label);
@@ -229,6 +272,7 @@ void PointAssign::postViewPoint(double x, double y, string label, string color){
   point.set_param("vertex_size","4");
   Notify("VIEW_POINT",point.get_spec());
 }
+  */
 
 
 
