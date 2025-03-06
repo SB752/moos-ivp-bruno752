@@ -10,6 +10,7 @@
 #include "ColorParse.h"
 #include "PointAssign.h"
 #include "PointAssign_Info.h"
+#include "PointReader.h"
 
 using namespace std;
 

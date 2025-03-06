@@ -33,8 +33,6 @@ PointAssign::PointAssign()
 
   m_point_pub_complete = false;
 
-  trouble_counter = 0;
-  trouble_iterate = 0;
 }
 
 //---------------------------------------------------------
@@ -49,14 +47,12 @@ PointAssign::~PointAssign()
 
 bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
 {
-  Notify("RECIEVED","Hello!!!!!!!!!!");
   AppCastingMOOSApp::OnNewMail(NewMail);
 
   MOOSMSG_LIST::iterator p;
   for(p=NewMail.begin(); p!=NewMail.end(); p++) {
     CMOOSMsg &msg = *p;
     string key    = msg.GetKey();
-    Notify("RECIEVED",key);
 
 #if 0 // Keep these around just for template
     string comm  = msg.GetCommunity();
@@ -79,12 +75,6 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
     if(key == "VISIT_POINT") { //Collects visit points, stops collecting once end reached
       m_visit_points.push_back(msg.GetString());
       string whatismessage = msg.GetString();
-      Notify("LOOP", key);
-      Notify("BAD_MESSAGE", whatismessage);
-      trouble_counter++;
-      Notify("TROUBLE_COUNTER", trouble_counter);
-      string TBout = "vector_end"+std::to_string(trouble_counter);
-      Notify(TBout, m_visit_points[m_visit_points.size()-1]);
       if (msg.GetString() == m_start_flag) {
         m_first_reading = true;
       } else if (msg.GetString() == m_end_flag){
@@ -121,6 +111,13 @@ bool PointAssign::Iterate()
 {
   AppCastingMOOSApp::Iterate();
   Notify("ITERATE","Made it here");
+  
+  
+  if(m_last_reading){  //Verify all readings recieved
+
+  }
+
+
   #if 0
   //if(m_current_time - m_ship_reg_time > 10){ //To make sure enough time for all ships to register
 
@@ -165,8 +162,7 @@ bool PointAssign::Iterate()
     m_point_pub_complete = true;
   }
 #endif
-  trouble_iterate++;
-  Notify("TROUBLE_ITERATE", trouble_iterate);
+
   AppCastingMOOSApp::PostReport();
   return(true);
 }
@@ -246,12 +242,15 @@ bool PointAssign::buildReport()
   m_msgs << "Assignment Method: " << m_assignment_method << endl;
   m_msgs << "============================================" << endl;
   m_msgs << "Ship Assignments:                           " << endl;
+
+  if(!m_ship_names.empty() && !m_visit_points.empty()&& !m_ship_points.empty()){
   for(int i = 0; i < m_ship_names.size(); i++){
     m_msgs << "Ship: " << m_ship_names[i] << endl;
     for(int j = 0; j < m_visit_points.size(); j++){
       m_msgs << "["<<j<<"]" << m_ship_points[i][j] << endl;
     }
   }
+}
   m_msgs << "============================================" << endl;
 
 /*
