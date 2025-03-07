@@ -10,6 +10,7 @@
 
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
 #include "XYPoint.h"
+#include "PointReader.h"
 
 class PointAssign : public AppCastingMOOSApp
 {
@@ -32,8 +33,9 @@ class PointAssign : public AppCastingMOOSApp
 
  private: // Configuration variables
   std::vector<std::string> m_ship_names;
-  std::vector<std::string> m_visit_points;
-  std::vector<std::vector<std::string>> m_ship_points;
+  std::vector<PointReader> m_visit_points;
+  std::vector<PointReader> m_ship_points_A;
+  std::vector<PointReader> m_ship_points_B;
 
   std::string m_assignment_method;
   std::string m_start_flag;
@@ -44,10 +46,9 @@ class PointAssign : public AppCastingMOOSApp
  double m_current_time;
  bool m_first_reading;
  bool m_last_reading;
- bool m_point_pub_complete;
 
- int trouble_counter;
- int trouble_iterate;
+ bool m_sort_complete;
+ bool m_point_pub_complete;
 };
 
 #endif 

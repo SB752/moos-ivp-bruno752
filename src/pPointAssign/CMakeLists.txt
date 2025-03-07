@@ -6,8 +6,9 @@
 SET(SRC
   PointAssign.cpp
   PointAssign_Info.cpp
-  main.cpp
   PointReader.cpp
+  main.cpp
+
 )
 
 ADD_EXECUTABLE(pPointAssign ${SRC})

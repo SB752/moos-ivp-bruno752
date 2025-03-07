@@ -8,13 +8,25 @@
 #ifndef PointReader_HEADER
 #define PointReader_HEADER
 
-#include "PointAssign.h"
+#include "MBUtils.h"
+#include <string>
 
-class PointReader : public PointAssign {
+class PointReader
+{
 public:
   PointReader();
   ~PointReader();
   void intake(std::string s);
+
+  double get_x();
+  double get_y();
+  int get_id();
+
+  void set_x(double x);
+  void set_y(double y);
+  void set_id(int id);
+
+  std::string get_string();
 
 
 private:

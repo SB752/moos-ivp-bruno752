@@ -7,7 +7,6 @@
 
 #include "PointReader.h"
 
-
 //---------------------------------------------------------
 // Constructor()
 PointReader::PointReader() {
@@ -27,10 +26,40 @@ PointReader::~PointReader() {
 
 void PointReader::intake(std::string s){
     std::string temp = biteStringX(s, '=');
-    m_x_val = std::stod(BiteStringX(s, ','));
+    m_x_val = std::stod(biteStringX(s, ','));
     temp = biteStringX(s, '=');
-    m_y_val = std::stod(BiteStringX(s, ','));
+    m_y_val = std::stod(biteStringX(s, ','));
     temp = biteStringX(s, '=');
     m_id = stoi(s);
 }
+
+double PointReader::get_x(){
+    return m_x_val;
+}
+
+double PointReader::get_y(){
+    return m_y_val;
+}
+
+int PointReader::get_id(){
+    return m_id;
+}
+
+void PointReader::set_x(double x){
+    m_x_val = x;
+}
+
+void PointReader::set_y(double y){
+    m_y_val = y;
+}
+
+void PointReader::set_id(int id){
+    m_id = id;
+}
+
+std::string PointReader::get_string(){
+    std::string s = "x=" + std::to_string(m_x_val) + ",y=" + std::to_string(m_y_val) + ",id=" + std::to_string(m_id);
+    return s;
+}
+
 

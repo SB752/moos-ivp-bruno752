@@ -3,12 +3,14 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: PointAssign.cpp                                 */
 /*    DATE: March 4th, 2025                                 */
+/*    UPDATE: March 7th, 2025                               */
 /************************************************************/
 
 #include <iterator>
 #include "MBUtils.h"
 #include "ACTable.h"
 #include "PointAssign.h"
+#include "PointReader.h"
 
 using namespace std;
 
@@ -17,9 +19,10 @@ using namespace std;
 
 PointAssign::PointAssign()
 {
-  m_ship_names ={};
-  m_visit_points = {};
-  m_ship_points;
+  m_ship_names;
+  m_visit_points;
+  m_ship_points_A;
+  m_ship_points_B;
 
   m_assignment_method = "default"; //Odds and evens or East/west
 
@@ -31,6 +34,7 @@ PointAssign::PointAssign()
   m_first_reading = false;
   m_last_reading = false;
 
+  m_sort_complete = false;
   m_point_pub_complete = false;
 
 }
@@ -73,13 +77,16 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
     }*/ //^^Draft Code for autodetecting ships
 
     if(key == "VISIT_POINT") { //Collects visit points, stops collecting once end reached
-      m_visit_points.push_back(msg.GetString());
-      string whatismessage = msg.GetString();
       if (msg.GetString() == m_start_flag) {
         m_first_reading = true;
       } else if (msg.GetString() == m_end_flag){
         m_last_reading = true;
+      } else {  //Transmits coordinates to vector of PointReader classes
+        PointReader mestemp;
+        mestemp.intake(msg.GetString());
+        m_visit_points.push_back(mestemp);
       }
+      //Notify("POINT_UNREAD","false");  <-if necessary for handshake
     }
 
 /*
@@ -110,58 +117,67 @@ bool PointAssign::OnConnectToServer()
 bool PointAssign::Iterate()
 {
   AppCastingMOOSApp::Iterate();
-  Notify("ITERATE","Made it here");
   
-  
-  if(m_last_reading){  //Verify all readings recieved
+  //Sort Points Based on selected method
+  if(m_last_reading && !m_sort_complete){  //Verify all readings recieved before sorting, haven't sorted already
+    //Sort points based on method
+    //Default: Odds and Evens
+    if(m_assignment_method == "default"){
+      for(int i = 0; i<m_visit_points.size(); i++){
+        if(m_visit_points[i].get_id() % 2 == 0){
+          m_ship_points_A.push_back(m_visit_points[i]);
+        } else {
+          m_ship_points_B.push_back(m_visit_points[i]);
+        }
+      }
+    } else{  //Alternative: East/West
+      //Calculate Average X
+      double avg_x = 0;
+      for(int i = 0; i<m_visit_points.size(); i++){
+        avg_x += m_visit_points[i].get_x();
+      }
+      avg_x = avg_x/m_visit_points.size();
+      //Split points based on average X
+      for(int i = 0; i<m_visit_points.size(); i++){
+        if(m_visit_points[i].get_x() > avg_x){
+          m_ship_points_A.push_back(m_visit_points[i]);
+        } else {
+          m_ship_points_B.push_back(m_visit_points[i]);
+        }
+      }
+    }
+    m_sort_complete = true;
 
   }
 
+  if(m_sort_complete && !m_point_pub_complete){ //Publish points to MOOSDB
+    Notify("VISIT_POINT_"+m_ship_names[0], m_start_flag);
+    Notify("VISIT_POINT_"+m_ship_names[1], m_start_flag);
 
-  #if 0
-  //if(m_current_time - m_ship_reg_time > 10){ //To make sure enough time for all ships to register
-
-  if(m_last_reading && (!m_point_pub_complete)){ //Don't want to interate until list is complete
-    retractRunWarning("Incomplete set of points provided");
-
-    if(m_assignment_method == "default"){ //Default is alternate points, alt is East/West
-      for(int i = 0; i < m_ship_names.size(); i++){ //Loop for Each Ship
-        //Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[0]); //Publishes "firstpoint"
-        m_ship_points[i][0] = m_visit_points[0]; //Stores first point for each ship
-  
-        for(int j = 1; j < m_visit_points.size()-1; j++){ //Loop for list of points
-          if(j % m_ship_names.size() == (i-1)){
-            //Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[j]);
-            m_ship_points[i][j] = m_visit_points[j];
-          } 
-        }
-
-        //Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[m_visit_points.size()-1]); //Publishes "lastpoint"
-        m_ship_points[i][m_visit_points.size()-1] = m_visit_points[m_visit_points.size()-1]; //Stores last point for each ship
-      }
+    for(int i = 0; i < m_ship_points_A.size(); i++){
+      XYPoint point(m_ship_points_A[i].get_x(), m_ship_points_A[i].get_y());
+      point.set_label(to_string(m_ship_points_A[i].get_id()));
+      point.set_color("vertex","red");
+      point.set_param("vertex_size","4");
+      Notify("VIEW_POINT", point.get_spec());
+      Notify("VISIT_POINT_"+m_ship_names[0], m_ship_points_A[i].get_string());
+      //Notify("TEST_A_"+to_string(i), m_ship_points_A[i].get_string());
     }
-     /*else if(m_assignment_method == "false"){ //East West <- Not implemented yet
-      int x_coord;
-      int y_coord;
-  
-      for(int i = 0; i < m_ship_names.size(); i++){ //Loop for Each Ship
-        Notify("VISIT_POINT_"+ m_ship_names[i], m_visit_points[i]);
-  
-  
-        
-      }
-    } else {
-      reportRunWarning("Incomplete set of points provided ");
-    }*/
-  for(int i = 0; i < m_ship_names.size(); i++){
-      for(int j = 0; j < m_visit_points.size(); j++){
-        postViewPoint(0,0,m_ship_points[i][j],"label");
-        Notify("VISIT_POINT_"+ m_ship_names[i], m_ship_points[i][j]);
-      }
+    for(int i = 0; i < m_ship_points_B.size(); i++){
+      XYPoint point(m_ship_points_B[i].get_x(), m_ship_points_B[i].get_y());
+      point.set_label(to_string(m_ship_points_B[i].get_id()));
+      point.set_color("vertex","blue");
+      point.set_param("vertex_size","4");
+      Notify("VIEW_POINT", point.get_spec());
+      Notify("VISIT_POINT_"+m_ship_names[1], m_ship_points_B[i].get_string());
+      //Notify("TEST_B_"+to_string(i), m_ship_points_B[i].get_string());
     }
+
+    //Notify("VISIT_POINT_"+m_ship_names[0], m_end_flag);
+    //Notify("VISIT_POINT_"+m_ship_names[1], m_end_flag);
+
     m_point_pub_complete = true;
   }
-#endif
 
   AppCastingMOOSApp::PostReport();
   return(true);
@@ -228,11 +244,9 @@ bool PointAssign::buildReport()
   m_msgs << "============================================" << endl;
   m_msgs << "Points Retrieved:                           " << endl;
   for(int i = 0; i < m_visit_points.size(); i++){
-    m_msgs <<"["<<i<<"]" << m_visit_points[i] << endl;
+    m_msgs <<"["<<i<<"]" << m_visit_points[i].get_string() << endl;
   }
   m_msgs << "total points: "<< m_visit_points.size() << endl;
-  m_msgs << "trouble Mail Counter: "<< trouble_counter << endl;
-  m_msgs << "trouble Iterate: "<< trouble_iterate << endl;
   m_msgs << "============================================" << endl;
   m_msgs << "Ships Detected:                             " << endl;
   for(int i = 0; i < m_ship_names.size(); i++){
@@ -242,15 +256,15 @@ bool PointAssign::buildReport()
   m_msgs << "Assignment Method: " << m_assignment_method << endl;
   m_msgs << "============================================" << endl;
   m_msgs << "Ship Assignments:                           " << endl;
-
-  if(!m_ship_names.empty() && !m_visit_points.empty()&& !m_ship_points.empty()){
-  for(int i = 0; i < m_ship_names.size(); i++){
-    m_msgs << "Ship: " << m_ship_names[i] << endl;
-    for(int j = 0; j < m_visit_points.size(); j++){
-      m_msgs << "["<<j<<"]" << m_ship_points[i][j] << endl;
-    }
+  m_msgs << "Ship A: "<< m_ship_names[0] << endl;
+  for(int i = 0; i < m_ship_points_A.size(); i++){
+    m_msgs <<"["<<i<<"]" << m_ship_points_A[i].get_string() << endl;
   }
-}
+  m_msgs << "Ship B: " << m_ship_names[1] << endl; 
+  for(int i = 0; i < m_ship_points_B.size(); i++){
+    m_msgs <<"["<<i<<"]" << m_ship_points_B[i].get_string() << endl;
+  }
+
   m_msgs << "============================================" << endl;
 
 /*

@@ -30,6 +30,15 @@ Processconfig = ANTLER
 #include plug_pLogger.moos
 
 //--------------------------------------------------
+// uProcessWatch Configuration Block
+
+ProcessConfig = uProcessWatch
+{
+
+
+}
+
+//--------------------------------------------------
 // uFldShoreBroker Configuration Block
 
 ProcessConfig = uFldShoreBroker
@@ -64,7 +73,7 @@ ProcessConfig = pMarineViewer
 	procs_font_size = xlarge
 	appcast_font_size = large
 	
-  point_viewable_labels   = false
+  point_viewable_labels   = true
   polygon_viewable_labels = false
   appcast_viewable     = true
   appcast_color_scheme = indigo
@@ -89,6 +98,7 @@ ProcessConfig = pMarineViewer
 ProcessConfig = pPointAssign
 {
 
+  assignment_method = default
 
   ship_list = gilda,henry
 }
@@ -98,11 +108,18 @@ ProcessConfig = uTimerScript
 {
 
   delay_start = 10
+
+
   event = var=VISIT_POINT, val="firstpoint"
+
   event = var=VISIT_POINT, val="x=-25,y=-25,id=1"
+
   event = var=VISIT_POINT, val="x=-25,y=-175,id=2"
+
   event = var=VISIT_POINT, val="x=200,y=-25,id=3"
+
   event = var=VISIT_POINT, val="x=200,y=-175,id=4"
+
   event = var=VISIT_POINT, val="lastpoint"
 }
 
