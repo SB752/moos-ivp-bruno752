@@ -108,16 +108,16 @@ ProcessConfig = pPointAssign
 ProcessConfig = uTimerScript
 {
 
-//  delay_start = 10
+delay_start = 10
   
   block_on = pPointAssign
 
-  rand_var = varname=RND_X, min=-100, max=150, key=at_post
+  rand_var = varname=RND_X, min=-75, max=150, key=at_post
   rand_var = varname=RND_Y, min=-200, max=-25, key=at_post
 
 
   event = var=VISIT_POINT, val="firstpoint"
-  event = var=VISIT_POINT, val="x=$[RND_X],y=$[RND_Y],id=$[TCOUNT]", time=0, amt=100
+  event = var=VISIT_POINT, val="x=$[RND_X],y=$[RND_Y],id=$[TCOUNT]", time=0, amt=50
 //  event = var=VISIT_POINT, val="x=-25,y=-25,id=1"
 //  event = var=VISIT_POINT, val="x=-25,y=-175,id=2"
 //  event = var=VISIT_POINT, val="x=200,y=-25,id=3"

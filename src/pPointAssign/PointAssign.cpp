@@ -168,35 +168,12 @@ bool PointAssign::Iterate()
       Notify("VISIT_POINT_"+m_ship_names[1], m_end_flag);
     }
 
-    m_export_count++;
+
     if(m_export_count >= m_ship_points_A.size() && m_export_count >= m_ship_points_B.size()){
       m_point_pub_complete = true;
     }
+    m_export_count++;
   }
-
-  /*
-#if 0
-  if(m_sort_complete && !m_point_pub_complete){ //Publish points to MOOSDB
-    Notify("VISIT_POINT_"+m_ship_names[0], m_start_flag);
-    Notify("VISIT_POINT_"+m_ship_names[1], m_start_flag);
-    Notify("TEST_A_START",m_start_flag);
-
-    for(int i = 0; i < m_ship_points_A.size(); i++){
-      postViewPoint(m_ship_points_A[i].get_x(), m_ship_points_A[i].get_y(), to_string(m_ship_points_A[i].get_id()), "red");
-      Notify("VISIT_POINT_"+m_ship_names[0], m_ship_points_A[i].get_string());
-
-    }
-    for(int i = 0; i < m_ship_points_B.size(); i++){
-      postViewPoint(m_ship_points_B[i].get_x(), m_ship_points_B[i].get_y(), to_string(m_ship_points_B[i].get_id()), "blue");
-      Notify("VISIT_POINT_"+m_ship_names[1], m_ship_points_B[i].get_string());
-      //Notify("TEST_B_"+to_string(i), m_ship_points_B[i].get_string());      AppCastingMOOSApp::PostReport();
-    Notify("VISIT_POINT_"+m_ship_names[1], m_end_flag);
-    Notify("TEST_A_FIN",m_end_flag);
-
-    m_point_pub_complete = true;
-  }
-#endif
-*/
 
   AppCastingMOOSApp::PostReport();
   return(true);

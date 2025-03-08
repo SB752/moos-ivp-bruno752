@@ -51,6 +51,9 @@ class GenPath : public AppCastingMOOSApp
 
    bool m_waypoints_published;
 
+   double m_score_count;
+   int m_trouble_tracker;
+
 
 };
 

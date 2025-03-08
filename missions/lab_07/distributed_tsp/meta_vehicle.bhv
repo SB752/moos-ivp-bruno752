@@ -48,7 +48,9 @@ Behavior = BHV_Waypoint
   nm_radius = 15.0
      points = $(START_POS)
      updates = UPDATES
-       lead = 8
+      lead = 8
+
+    wpt_index_var = SCORE
 }
 
 //----------------------------------------------
@@ -101,7 +103,7 @@ Behavior = BHV_Timer
   endflag   = REFUEL = false
   endflag   = RETURN = false
   endflag   = STATION_KEEP = false
-  endflag   = LOITER = true
+  endflag   = TSP = true
   perpetual = true
 }
 

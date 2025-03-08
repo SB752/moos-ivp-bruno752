@@ -29,6 +29,9 @@ GenPath::GenPath()
   m_first_y = false;
 
   m_waypoints_published = false;
+
+  m_score_count = 0;
+  m_trouble_tracker =1;
 }
 
 //---------------------------------------------------------
@@ -61,14 +64,12 @@ bool GenPath::OnNewMail(MOOSMSG_LIST &NewMail)
 #endif
 
      if(key == "VISIT_POINT"){ 
-      Notify("POINT-xyz",msg.GetString());
        if (msg.GetString() == m_start_flag){
          m_first_reading = true;
        } else if (msg.GetString() == m_end_flag){
          m_last_reading = true;
        } else {
          PointReader point;
-         Notify("POINT_xxx",msg.GetString());
          point.intake(msg.GetString());
          m_mission_points.push_back(point);
        }
@@ -80,7 +81,11 @@ bool GenPath::OnNewMail(MOOSMSG_LIST &NewMail)
      } else if(key == "NAV_Y" && !m_first_y){
        m_y_pos = msg.GetDouble();
       //m_first_y = true;
+
+     } else if(key=="SCORE"){
+      m_score_count += msg.GetDouble();
      }
+
 
      else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
        reportRunWarning("Unhandled Mail: " + key);
@@ -113,7 +118,7 @@ bool GenPath::Iterate()
     Notify("PRE-LOOP",copy.size());
 
     //Sorts points by closest distance to previous point, starting with first point
-    while(!copy.empty()){
+    while(copy.size()>0){
       double min_dist = 1000000;
       int min_index = 0;
       Notify("ENTERED LOOP","Success");
@@ -122,10 +127,13 @@ bool GenPath::Iterate()
         if(dist < min_dist){
           min_dist = dist;
           min_index = i;
-          Notify("MISSION Points Processed",i);
         }
       }
       copy.erase(copy.begin()+min_index); //removes closest point from list for remaining iterations
+
+
+      Notify("MIS POINTS PROCESSED", m_trouble_tracker);
+      m_trouble_tracker++;
 
       m_waypoints_output += to_string(m_mission_points[min_index].get_x()) + "," + to_string(m_mission_points[min_index].get_y()) + ":";
       Prev_x = m_mission_points[min_index].get_x(); //Resets previous point to closest point for next loop iteration
@@ -133,11 +141,13 @@ bool GenPath::Iterate()
       
 
     }
-    //Sends update message
+    //Sends waypoint list once
     Notify("UPDATES",m_waypoints_output);
     m_waypoints_published = true;
   }
 
+
+  Notify("SCOREBOARD",m_score_count);
   AppCastingMOOSApp::PostReport();
   return(true);
 }
@@ -199,8 +209,10 @@ void GenPath::registerVariables()
 bool GenPath::buildReport() 
 {
   m_msgs << "============================================" << endl;
-  m_msgs << "Waypoints:                                  " << endl;
-  m_msgs << m_waypoints_output << endl;
+  m_msgs << "# of Waypoints:                             " << endl;
+  m_msgs << m_mission_points.size() << endl;
+  m_msgs << "SCORE: "<< endl;
+  m_msgs << m_score_count << endl;
   m_msgs << "============================================" << endl;
 
   return(true);
