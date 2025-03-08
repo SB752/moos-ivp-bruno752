@@ -33,6 +33,7 @@ class GenPath : public AppCastingMOOSApp
  private: // Configuration variables
    std::vector<PointReader> m_mission_points;
    std::vector<PointReader> m_waypoints_list;
+   std::vector<PointReader> m_working_copy;
 
    std::string m_waypoints_output;
 
