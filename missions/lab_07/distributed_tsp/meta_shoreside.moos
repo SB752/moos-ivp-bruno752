@@ -54,6 +54,7 @@ ProcessConfig = uFldShoreBroker
   bridge   = src=RETURN_$V,  alias=RETURN
 
   bridge  = src=REFUEL_NEEDED_ALL, alias=REFUEL
+  bridge  = src=VISIT_POINT_$V, alias=VISIT_POINT
 }
 
 //--------------------------------------------------------
@@ -98,28 +99,29 @@ ProcessConfig = pMarineViewer
 ProcessConfig = pPointAssign
 {
 
-  assignment_method = default
+  assignment_method = EW
 
-  ship_list = gilda,henry
+  ship_list = GILDA,HENRY
 }
 
 //--------------------------------------------------------
 ProcessConfig = uTimerScript
 {
 
-  delay_start = 10
+//  delay_start = 10
+  
+  block_on = pPointAssign
+
+  rand_var = varname=RND_X, min=-100, max=150, key=at_post
+  rand_var = varname=RND_Y, min=-200, max=-25, key=at_post
 
 
   event = var=VISIT_POINT, val="firstpoint"
-
-  event = var=VISIT_POINT, val="x=-25,y=-25,id=1"
-
-  event = var=VISIT_POINT, val="x=-25,y=-175,id=2"
-
-  event = var=VISIT_POINT, val="x=200,y=-25,id=3"
-
-  event = var=VISIT_POINT, val="x=200,y=-175,id=4"
-
+  event = var=VISIT_POINT, val="x=$[RND_X],y=$[RND_Y],id=$[TCOUNT]", time=0, amt=100
+//  event = var=VISIT_POINT, val="x=-25,y=-25,id=1"
+//  event = var=VISIT_POINT, val="x=-25,y=-175,id=2"
+//  event = var=VISIT_POINT, val="x=200,y=-25,id=3"
+//  event = var=VISIT_POINT, val="x=200,y=-175,id=4"
   event = var=VISIT_POINT, val="lastpoint"
 }
 

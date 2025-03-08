@@ -1,13 +1,13 @@
 /****************************************************************/
 /*   NAME: Stephen Bruno                                             */
 /*   ORGN: MIT, Cambridge MA                                    */
-/*   FILE: PointAssign_Info.cpp                               */
-/*   DATE: March 4th, 2025                                      */
+/*   FILE: GenPath_Info.cpp                               */
+/*   DATE: December 29th, 1963                                  */
 /****************************************************************/
 
 #include <cstdlib>
 #include <iostream>
-#include "PointAssign_Info.h"
+#include "GenPath_Info.h"
 #include "ColorParse.h"
 #include "ReleaseInfo.h"
 
@@ -20,8 +20,10 @@ void showSynopsis()
 {
   blk("SYNOPSIS:                                                       ");
   blk("------------------------------------                            ");
-  blk("  The pPointAssign application is used for taking in a list of  ");
-  blk("  points and assigning them to two ships.                       ");
+  blk("  The pGenPath application is used for               ");
+  blk("                                                                ");
+  blk("                                                                ");
+  blk("                                                                ");
   blk("                                                                ");
 }
 
@@ -32,15 +34,15 @@ void showHelpAndExit()
 {
   blk("                                                                ");
   blu("=============================================================== ");
-  blu("Usage: pPointAssign file.moos [OPTIONS]                   ");
+  blu("Usage: pGenPath file.moos [OPTIONS]                   ");
   blu("=============================================================== ");
   blk("                                                                ");
   showSynopsis();
   blk("                                                                ");
   blk("Options:                                                        ");
   mag("  --alias","=<ProcessName>                                      ");
-  blk("      Launch pPointAssign with the given process name         ");
-  blk("      rather than pPointAssign.                           ");
+  blk("      Launch pGenPath with the given process name         ");
+  blk("      rather than pGenPath.                           ");
   mag("  --example, -e                                                 ");
   blk("      Display example MOOS configuration block.                 ");
   mag("  --help, -h                                                    ");
@@ -48,7 +50,7 @@ void showHelpAndExit()
   mag("  --interface, -i                                               ");
   blk("      Display MOOS publications and subscriptions.              ");
   mag("  --version,-v                                                  ");
-  blk("      Display the release version of pPointAssign.        ");
+  blk("      Display the release version of pGenPath.        ");
   blk("                                                                ");
   blk("Note: If argv[2] does not otherwise match a known option,       ");
   blk("      then it will be interpreted as a run alias. This is       ");
@@ -64,10 +66,10 @@ void showExampleConfigAndExit()
 {
   blk("                                                                ");
   blu("=============================================================== ");
-  blu("pPointAssign Example MOOS Configuration                   ");
+  blu("pGenPath Example MOOS Configuration                   ");
   blu("=============================================================== ");
   blk("                                                                ");
-  blk("ProcessConfig = pPointAssign                              ");
+  blk("ProcessConfig = pGenPath                              ");
   blk("{                                                               ");
   blk("  AppTick   = 4                                                 ");
   blk("  CommsTick = 4                                                 ");
@@ -85,7 +87,7 @@ void showInterfaceAndExit()
 {
   blk("                                                                ");
   blu("=============================================================== ");
-  blu("pPointAssign INTERFACE                                    ");
+  blu("pGenPath INTERFACE                                    ");
   blu("=============================================================== ");
   blk("                                                                ");
   showSynopsis();
@@ -107,7 +109,7 @@ void showInterfaceAndExit()
 
 void showReleaseInfoAndExit()
 {
-  showReleaseInfo("pPointAssign", "gpl");
+  showReleaseInfo("pGenPath", "gpl");
   exit(0);
 }
 

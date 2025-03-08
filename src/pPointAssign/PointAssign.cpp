@@ -37,6 +37,8 @@ PointAssign::PointAssign()
   m_sort_complete = false;
   m_point_pub_complete = false;
 
+  m_export_count = 0;
+
 }
 
 //---------------------------------------------------------
@@ -89,11 +91,6 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
       //Notify("POINT_UNREAD","false");  <-if necessary for handshake
     }
 
-/*
-    else if(key == "DB_TIME") {
-      m_current_time = msg.GetDouble();
-    }
-    */
     else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
    }
@@ -150,38 +147,61 @@ bool PointAssign::Iterate()
 
   }
 
+  //Publish Points to MOOSDB
+  if(m_sort_complete && !m_point_pub_complete){ 
+    if(m_export_count == 0){
+      Notify("VISIT_POINT_"+m_ship_names[0], m_start_flag);
+      Notify("VISIT_POINT_"+m_ship_names[1], m_start_flag);
+    }
+
+    if(m_export_count < m_ship_points_A.size()){
+      postViewPoint(m_ship_points_A[m_export_count].get_x(), m_ship_points_A[m_export_count].get_y(), to_string(m_ship_points_A[m_export_count].get_id()), "red");
+      Notify("VISIT_POINT_"+m_ship_names[0], m_ship_points_A[m_export_count].get_string());
+    } else if(m_export_count == m_ship_points_A.size()){
+      Notify("VISIT_POINT_"+m_ship_names[0], m_end_flag);
+    }
+
+    if(m_export_count < m_ship_points_B.size()){
+      postViewPoint(m_ship_points_B[m_export_count].get_x(), m_ship_points_B[m_export_count].get_y(), to_string(m_ship_points_B[m_export_count].get_id()), "blue");
+      Notify("VISIT_POINT_"+m_ship_names[1], m_ship_points_B[m_export_count].get_string());
+    } else if(m_export_count == m_ship_points_B.size()){
+      Notify("VISIT_POINT_"+m_ship_names[1], m_end_flag);
+    }
+
+    m_export_count++;
+    if(m_export_count >= m_ship_points_A.size() && m_export_count >= m_ship_points_B.size()){
+      m_point_pub_complete = true;
+    }
+  }
+
+  /*
+#if 0
   if(m_sort_complete && !m_point_pub_complete){ //Publish points to MOOSDB
     Notify("VISIT_POINT_"+m_ship_names[0], m_start_flag);
     Notify("VISIT_POINT_"+m_ship_names[1], m_start_flag);
+    Notify("TEST_A_START",m_start_flag);
 
     for(int i = 0; i < m_ship_points_A.size(); i++){
-      XYPoint point(m_ship_points_A[i].get_x(), m_ship_points_A[i].get_y());
-      point.set_label(to_string(m_ship_points_A[i].get_id()));
-      point.set_color("vertex","red");
-      point.set_param("vertex_size","4");
-      Notify("VIEW_POINT", point.get_spec());
+      postViewPoint(m_ship_points_A[i].get_x(), m_ship_points_A[i].get_y(), to_string(m_ship_points_A[i].get_id()), "red");
       Notify("VISIT_POINT_"+m_ship_names[0], m_ship_points_A[i].get_string());
-      //Notify("TEST_A_"+to_string(i), m_ship_points_A[i].get_string());
+
     }
     for(int i = 0; i < m_ship_points_B.size(); i++){
-      XYPoint point(m_ship_points_B[i].get_x(), m_ship_points_B[i].get_y());
-      point.set_label(to_string(m_ship_points_B[i].get_id()));
-      point.set_color("vertex","blue");
-      point.set_param("vertex_size","4");
-      Notify("VIEW_POINT", point.get_spec());
+      postViewPoint(m_ship_points_B[i].get_x(), m_ship_points_B[i].get_y(), to_string(m_ship_points_B[i].get_id()), "blue");
       Notify("VISIT_POINT_"+m_ship_names[1], m_ship_points_B[i].get_string());
-      //Notify("TEST_B_"+to_string(i), m_ship_points_B[i].get_string());
-    }
-
-    //Notify("VISIT_POINT_"+m_ship_names[0], m_end_flag);
-    //Notify("VISIT_POINT_"+m_ship_names[1], m_end_flag);
+      //Notify("TEST_B_"+to_string(i), m_ship_points_B[i].get_string());      AppCastingMOOSApp::PostReport();
+    Notify("VISIT_POINT_"+m_ship_names[1], m_end_flag);
+    Notify("TEST_A_FIN",m_end_flag);
 
     m_point_pub_complete = true;
   }
+#endif
+*/
 
   AppCastingMOOSApp::PostReport();
   return(true);
 }
+
 
 //---------------------------------------------------------
 // Procedure: OnStartUp()
@@ -228,10 +248,9 @@ bool PointAssign::OnStartUp()
 void PointAssign::registerVariables()
 {
   AppCastingMOOSApp::RegisterVariables();
-  // Register("FOOBAR", 0);
+
   Register("VISIT_POINT",0);
-  //Register("NODE_REPORT",0);
-  //Register("DB_TIME",0);
+
 
 }
 
@@ -267,17 +286,12 @@ bool PointAssign::buildReport()
 
   m_msgs << "============================================" << endl;
 
-/*
-  ACTable actab(4);
-  actab << "Alpha | Bravo | Charlie | Delta";
-  actab.addHeaderLines();
-  actab << "one" << "two" << "three" << "four";
-  m_msgs << actab.getFormattedString();
-*/
+
   return(true);
 }
 
-/*
+//------------------------------------------------------------
+// Procedure: postViewPoint()
 void PointAssign::postViewPoint(double x, double y, string label, string color){
   XYPoint point(x,y);
   point.set_label(label);
@@ -285,7 +299,7 @@ void PointAssign::postViewPoint(double x, double y, string label, string color){
   point.set_param("vertex_size","4");
   Notify("VIEW_POINT",point.get_spec());
 }
-  */
+  
 
 
 

@@ -4,9 +4,9 @@
 initialize   DEPLOY  = true
 initialize   RETURN  = false
 initialize   STATION_KEEP = false
-initialize   LOITER  = true
 initialize   START_REFUEL = false
 initialize   AT_HOME = false
+initialize   TSP = true
 
 set MODE = ACTIVE {
   DEPLOY = true
@@ -22,36 +22,33 @@ set MODE = RETURNING {
   RETURN = true
 } 
 
-set MODE = LOITERING {
-  MODE = ACTIVE
-  LOITER = true
-} 
-
 set MODE = REFUEL {
   MODE = ACTIVE:STATION-KEEPING
   REFUEL = true
   AT_HOME = true
 }
 
+set MODE = TSP {
+  MODE = ACTIVE
+  TSP = true
+}
+
 //----------------------------------------------
-Behavior = BHV_Loiter
+Behavior = BHV_Waypoint
 {
-  name      = loiter
+  name      = Traveling_Salesman
   pwt       = 100
-  condition = MODE==LOITERING
+  condition = (MODE==TSP)
+  
 
-  runflag = AT_HOME = false
+  perpetual = true
 
-   post_suffix = A
-         speed = 1.3
-     clockwise = false
-        radius = 8.0
-     nm_radius = 15.0
-       polygon = radial::$(LOITER_POS), radius=20, pts=8, snap=1, label=$(VNAME)_LOITER
-
-  visual_hints = nextpt_color=white, nextpt_lcolor=khaki
-  visual_hints = edge_color=orange, vertex_color=white
-  visual_hints = edge_size=1, vertex_size=2
+      speed = 1.2
+     radius = 3.0
+  nm_radius = 15.0
+     points = $(START_POS)
+     updates = UPDATES
+       lead = 8
 }
 
 //----------------------------------------------
@@ -113,12 +110,12 @@ Behavior = BHV_Timer
 {
   name      = timer_remaining_fuel
   pwt       = 100
-  condition = MODE==LOITERING
-  duration  = 300
+  condition = MODE==TSP
+  duration  = 600
   duration_idle_decay=false
   
   endflag   = REFUEL = true
   endflag   = RETURN = true
-  endflag   = LOITER = false
+  endflag   = TSP = false
   perpetual = true
 }
