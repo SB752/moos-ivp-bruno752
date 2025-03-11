@@ -51,6 +51,9 @@ class PointAssign : public AppCastingMOOSApp
  bool m_point_pub_complete;
 
  int m_export_count;
+
+ bool m_ship_A_ready;
+ bool m_ship_B_ready;
 };
 
 #endif 

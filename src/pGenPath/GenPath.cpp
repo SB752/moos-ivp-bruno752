@@ -85,16 +85,16 @@ bool GenPath::OnNewMail(MOOSMSG_LIST &NewMail)
          m_mission_points.push_back(point);
        }
 
-     } else if(key == "NAV_X" && !m_first_x){
+     } else if(key == "NAV_X"){
        m_x_pos = msg.GetDouble();
-       //m_first_x = true;
+       m_first_x = true;
 
-     } else if(key == "NAV_Y" && !m_first_y){
+     } else if(key == "NAV_Y"){
        m_y_pos = msg.GetDouble();
-      //m_first_y = true;
+      m_first_y = true;
 
      } else if(key=="SCORE"){
-      m_score_count += msg.GetDouble();
+      m_score_count = max(m_score_count,msg.GetDouble());
      }
 
 
@@ -121,6 +121,8 @@ bool GenPath::OnConnectToServer()
 bool GenPath::Iterate()
 {
   AppCastingMOOSApp::Iterate();
+
+  Notify("GEN_PATH_READY",m_host_community);
  
   if(m_last_reading && !m_waypoints_published){  //Doesn't run until all points are collected
 
@@ -129,8 +131,6 @@ bool GenPath::Iterate()
     Prev_y = m_y_pos;
     m_start_assignment = true;
     }
-
-    Notify("PRE-LOOP",m_working_copy.size());
 
     //Sorts points by closest distance to previous point, starting with first point
     while(!m_working_copy.empty()){
@@ -208,7 +208,8 @@ bool GenPath::OnStartUp()
 
   }
   
-  registerVariables();	
+  registerVariables();
+  Notify("GEN_PATH_READY",m_host_community);
   return(true);
 }
 
@@ -231,15 +232,14 @@ void GenPath::registerVariables()
 
 bool GenPath::buildReport() 
 {
-  m_msgs << " hello"<< endl; 
-  
   m_msgs << "============================================" << endl;
-  m_msgs << "Waypoints                             " << endl;
-
-  
-  for(int i=0; i<m_mission_points.size(); i++){
-    m_msgs << "Point " << i << ": " << m_mission_points[i].get_string() << endl;
-  }
+  m_msgs << "Community: " + m_host_community << endl;
+  m_msgs << "First Point Recieved: " + to_string(m_first_reading) << endl;
+  m_msgs << "Last Point Recieved: " + to_string(m_last_reading) << endl;
+  m_msgs << "NAV X/Y Recieved: " + to_string(m_first_x) + "/" + to_string(m_first_y) << endl;
+  m_msgs << "Number of Assigned waypoints: " + to_string(m_mission_points.size()) << endl;
+  m_msgs << "============================================" << endl;
+  m_msgs << "Waypoints Visited:                     " << endl;
   m_msgs << to_string(m_score_count)                        << endl;
   m_msgs << "============================================" << endl;
 

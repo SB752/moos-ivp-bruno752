@@ -39,6 +39,9 @@ PointAssign::PointAssign()
 
   m_export_count = 0;
 
+  m_ship_A_ready = false;
+  m_ship_B_ready = false;
+
 }
 
 //---------------------------------------------------------
@@ -88,8 +91,16 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
         mestemp.intake(msg.GetString());
         m_visit_points.push_back(mestemp);
       }
-      //Notify("POINT_UNREAD","false");  <-if necessary for handshake
+
+    } else if(key == "GEN_PATH_READY") {
+      if((toupper(msg.GetString()) == m_ship_names[0])||(tolower(msg.GetString()) == m_ship_names[0])){
+        m_ship_A_ready = true;
+      } else if((toupper(msg.GetString()) == m_ship_names[1])||(tolower(msg.GetString()) == m_ship_names[1])){
+        m_ship_B_ready = true;
+    } else{
+      reportRunWarning("Unhandled GEN_PATH_READY: "+msg.GetString());
     }
+  }
 
     else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
@@ -148,7 +159,7 @@ bool PointAssign::Iterate()
   }
 
   //Publish Points to MOOSDB
-  if(m_sort_complete && !m_point_pub_complete){ 
+  if(m_sort_complete && !m_point_pub_complete && m_ship_A_ready && m_ship_B_ready){ 
     if(m_export_count == 0){
       Notify("VISIT_POINT_"+m_ship_names[0], m_start_flag);
       Notify("VISIT_POINT_"+m_ship_names[1], m_start_flag);
@@ -202,11 +213,19 @@ bool PointAssign::OnStartUp()
 
     bool handled = false;
     if(param == "ship_list") {
-      m_ship_names = parseString(value, ',');
+      m_ship_names = (parseString(value, ','));
       handled = true;
     }
     else if(param == "assignment_method") {
       m_assignment_method = value;
+      handled = true;
+    }
+    else if(param == "start_flag") {
+      m_start_flag = value;
+      handled = true;
+    }
+    else if(param == "end_flag") {
+      m_end_flag = value;
       handled = true;
     }
 
@@ -227,6 +246,7 @@ void PointAssign::registerVariables()
   AppCastingMOOSApp::RegisterVariables();
 
   Register("VISIT_POINT",0);
+  Register("GEN_PATH_READY",0);
 
 
 }

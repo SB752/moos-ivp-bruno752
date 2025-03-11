@@ -107,8 +107,6 @@ ProcessConfig = pPointAssign
 //--------------------------------------------------------
 ProcessConfig = uTimerScript
 {
-
-//  delay_start = 10
   
   block_on = pPointAssign
 
@@ -117,11 +115,7 @@ ProcessConfig = uTimerScript
 
 
   event = var=VISIT_POINT, val="firstpoint"
-  event = var=VISIT_POINT, val="x=$[RND_X],y=$[RND_Y],id=$[TCOUNT]", time=0, amt=50
-//  event = var=VISIT_POINT, val="x=-25,y=-25,id=1"
-//  event = var=VISIT_POINT, val="x=-25,y=-175,id=2"
-//  event = var=VISIT_POINT, val="x=200,y=-25,id=3"
-//  event = var=VISIT_POINT, val="x=200,y=-175,id=4"
+  event = var=VISIT_POINT, val="x=$[RND_X],y=$[RND_Y],id=$[TCOUNT]", time=0, amt=100
   event = var=VISIT_POINT, val="lastpoint"
 }
 

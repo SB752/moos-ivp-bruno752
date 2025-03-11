@@ -14,4 +14,5 @@ ProcessConfig = uFldNodeBroker
   bridge = src=APPCAST
   bridge = src=NODE_REPORT_LOCAL,  alias=NODE_REPORT
   bridge = src=NODE_MESSAGE_LOCAL, alias=NODE_MESSAGE
+  bridge = src=GEN_PATH_READY
 }

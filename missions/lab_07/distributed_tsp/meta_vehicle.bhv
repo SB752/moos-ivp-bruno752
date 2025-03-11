@@ -41,13 +41,14 @@ Behavior = BHV_Waypoint
   condition = (MODE==TSP)
   
 
-  perpetual = true
+  perpetual = false
 
       speed = 1.2
      radius = 3.0
   nm_radius = 15.0
      updates = UPDATES
       lead = 8
+
 
     wpt_index_var = SCORE
 
