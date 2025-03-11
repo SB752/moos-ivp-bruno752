@@ -43,3 +43,11 @@ Processconfig = pGenPath
 
 }
 
+//Config Block pRealm
+{
+  hist_var = VISIT_POINT
+  msg_max_hist = 100
+
+
+}
+

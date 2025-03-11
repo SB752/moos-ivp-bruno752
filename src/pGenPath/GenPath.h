@@ -11,6 +11,7 @@
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
 #include"../pPointAssign/PointReader.h"
 #include "MBUtils.h"
+#include "XYSegList.h"
 
 class GenPath : public AppCastingMOOSApp
 {
@@ -54,6 +55,13 @@ class GenPath : public AppCastingMOOSApp
 
    double m_score_count;
    int m_trouble_tracker;
+
+   bool m_start_assignment;
+
+   double Prev_x =  0.0;
+   double Prev_y = 0.0;
+
+   XYSegList waypoint_list;
 
 
 };

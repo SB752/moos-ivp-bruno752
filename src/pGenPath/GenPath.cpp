@@ -34,6 +34,13 @@ GenPath::GenPath()
   m_trouble_tracker =1;
 
   m_working_copy;
+  m_start_assignment = false;
+
+  //Prev_x;
+  //Prev_y;
+
+  //waypoint_list;
+
 }
 
 //---------------------------------------------------------
@@ -114,9 +121,14 @@ bool GenPath::OnConnectToServer()
 bool GenPath::Iterate()
 {
   AppCastingMOOSApp::Iterate();
+ 
   if(m_last_reading && !m_waypoints_published){  //Doesn't run until all points are collected
-    double Prev_x = m_x_pos;
-    double Prev_y = m_y_pos;
+
+    if(!m_start_assignment){
+    Prev_x = m_x_pos;
+    Prev_y = m_y_pos;
+    m_start_assignment = true;
+    }
 
     Notify("PRE-LOOP",m_working_copy.size());
 
@@ -124,35 +136,40 @@ bool GenPath::Iterate()
     while(!m_working_copy.empty()){
       double min_dist = 1000000;
       int min_index = 0;
-      Notify("ENTERED LOOP","Success");
+      //Notify("ENTERED LOOP","Success");
       for(int i=0; i<m_working_copy.size(); i++){ //finds closest point
-        double dist = sqrt(pow(m_mission_points[i].get_x()-Prev_x,2)+pow(m_mission_points[i].get_y()-Prev_y,2));
-        if(dist < min_dist){
+        double dist = sqrt(pow(m_working_copy[i].get_x()-Prev_x,2)+pow(m_working_copy[i].get_y()-Prev_y,2));
+        if(dist <= min_dist){
           min_dist = dist;
           min_index = i;
         }
       }
+      waypoint_list.add_vertex(m_working_copy[min_index].get_x(),m_working_copy[min_index].get_y());
+
+      Prev_x = m_working_copy[min_index].get_x(); //Resets previous point to closest point for next loop iteration
+      Prev_y = m_working_copy[min_index].get_y();
+
       m_working_copy.erase(m_working_copy.begin()+min_index); //removes closest point from list for remaining iterations
 
 
       Notify("MIS POINTS PROCESSED", m_trouble_tracker);
       m_trouble_tracker++;
 
-      
-      m_waypoints_output += (to_string(m_mission_points[min_index].get_x()) + "," + to_string(m_mission_points[min_index].get_y()) + ":");
 
-      Prev_x = m_mission_points[min_index].get_x(); //Resets previous point to closest point for next loop iteration
-      Prev_y = m_mission_points[min_index].get_y();
-      
 
     }
-    //Sends waypoint list once
+    //Sends waypoint list once all points proccessed
+    //m_waypoints_output += (to_string(m_mission_points[min_index].get_x()) + "," + to_string(m_mission_points[min_index].get_y()) + ":");
+
+    m_waypoints_output += waypoint_list.get_spec();
     Notify("UPDATES",m_waypoints_output);
     m_waypoints_published = true;
+
   }
 
 
   Notify("SCOREBOARD",m_score_count);
+
   AppCastingMOOSApp::PostReport();
   return(true);
 }
@@ -214,10 +231,15 @@ void GenPath::registerVariables()
 
 bool GenPath::buildReport() 
 {
+  m_msgs << " hello"<< endl; 
+  
   m_msgs << "============================================" << endl;
-  m_msgs << "# of Waypoints:                             " << endl;
-  m_msgs << "xxx"                                          << endl;
-  m_msgs << "SCORE: "                                      << endl;
+  m_msgs << "Waypoints                             " << endl;
+
+  
+  for(int i=0; i<m_mission_points.size(); i++){
+    m_msgs << "Point " << i << ": " << m_mission_points[i].get_string() << endl;
+  }
   m_msgs << to_string(m_score_count)                        << endl;
   m_msgs << "============================================" << endl;
 

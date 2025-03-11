@@ -108,7 +108,7 @@ ProcessConfig = pPointAssign
 ProcessConfig = uTimerScript
 {
 
-delay_start = 10
+//  delay_start = 10
   
   block_on = pPointAssign
 
