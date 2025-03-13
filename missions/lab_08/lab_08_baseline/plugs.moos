@@ -1,0 +1,85 @@
+// plugs.moos 
+// (1) The plugs.moos file contains plugs that may be included
+//     in both meta_vehicle.moos and meta_shoreside.moos files.
+// (2) The nsplug utility uses the <tag><block> as a delimeter.
+//     #include plugs.moos <tag> will only include the block
+//     below the matching tag up to another line begining
+//     with <tag>.
+	
+<tag><origin_warp>
+MOOSTimeWarp = $(WARP)
+LatOrigin  = 43.825300 
+LongOrigin = -70.330400 
+
+<tag><pHostInfo>
+//--------------------------------------------------
+// pHostInfo config block
+
+ProcessConfig = pHostInfo
+{
+  AppTick 	= 1
+  CommsTick = 1
+
+#ifdef IP_ADDR
+  default_hostip_force = $(IP_ADDR)
+#endif
+}
+
+<tag><pShare>
+//---------------------------------------------------------
+// pShare config block
+
+ProcessConfig = pShare
+{
+  AppTick   = 2
+  CommsTick = 2
+
+  input = route =  $(IP_ADDR):$(PSHARE_PORT)
+}
+
+<tag><uProcessWatch>
+//--------------------------------------------------------
+// uProcessWatch config block
+
+ProcessConfig = uProcessWatch
+{
+  AppTick   = 2
+  CommsTick = 2
+  
+	allow_retractions = true
+
+	watch_all = true
+  nowatch   = uMAC*
+  nowatch   = uXMS*
+  nowatch   = uPokeDB*
+  nowatch   = uMAC*
+
+	summary_wait = 10
+}
+
+<tag><uSimMarineV22>
+//------------------------------------------------------
+// uSimMarineV22 Config Block
+	
+ProcessConfig = uSimMarineV22
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  start_pos = $(START_POS), 0
+  prefix    = NAV
+
+  max_speed = $(MAX_SPD)
+
+  turn_rate = 98
+  turn_spd_loss = 0.4
+
+  //post_des_thrust = DESIRED_THRUSTX
+  //post_des_rudder = DESIRED_RUDDERX
+
+  //post_navpos_summary = true
+
+  //rotate_speed = 0.012 
+  //drift_x      = 0.0045
+  //thrust_map = -100:-2, 0:0, 20:1, 40:2, 60:3, 80:5, 100:5                  
+}

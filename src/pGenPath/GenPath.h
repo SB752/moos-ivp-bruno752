@@ -31,12 +31,12 @@ class GenPath : public AppCastingMOOSApp
  protected:
    void registerVariables();
 
+   void findShortestPath(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
+   void publishWaypoints();
+
  private: // Configuration variables
    std::vector<PointReader> m_mission_points;
    std::vector<PointReader> m_waypoints_list;
-   std::vector<PointReader> m_working_copy;
-
-   std::string m_waypoints_output;
 
    std::string m_start_flag;
    std::string m_end_flag;
@@ -62,6 +62,13 @@ class GenPath : public AppCastingMOOSApp
    double Prev_y = 0.0;
 
    XYSegList waypoint_list;
+
+   std::vector<bool> m_visited_points_tracker;
+
+   double visit_radius;
+   bool m_regen_path;
+
+   int m_wpt_index;
 
 
 };

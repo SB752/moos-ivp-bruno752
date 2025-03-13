@@ -41,6 +41,7 @@
 *.blog
 *.ylog
 *.klog
+*.slog
 *.moos++
 *._moos
 *._bhv
