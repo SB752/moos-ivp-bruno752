@@ -42,7 +42,7 @@ Processconfig = pGenPath
 {
 
   visit_radius = 2
-  //recalc_at_fueling = true
+  recalc_at_fueling = true
 
 }
 

@@ -3,6 +3,7 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: GenPath.cpp                                        */
 /*    DATE: March 7th, 2025                             */
+/*    UPDATED: March 18th, 2025                             */
 /************************************************************/
 
 #include <iterator>
@@ -38,6 +39,8 @@ GenPath::GenPath()
   m_regen_path = false;
 
   m_wpt_index = 0;
+
+  recalc_at_fueling = false;
 
   //Prev_x;
   //Prev_y;
@@ -137,7 +140,7 @@ bool GenPath::Iterate()
     for(int i=0; i<m_mission_points.size(); i++){
       m_visited_points_tracker.push_back(false);
     }
-
+    //First generation of shortest path
     findShortestPath(m_mission_points,m_visited_points_tracker,m_x_pos,m_y_pos);
     m_waypoints_published = true;
   }
@@ -161,9 +164,7 @@ bool GenPath::Iterate()
     }
   }
 
-
-
-  
+  //Regenerates Path when flag posted (should be posted by IvPHelm behavior)
   if(m_regen_path){
     if(m_score_count == m_mission_points.size()){
       Notify("RETURN","true");
@@ -171,9 +172,10 @@ bool GenPath::Iterate()
     findShortestPath(m_mission_points,m_visited_points_tracker,m_x_pos,m_y_pos);
     m_regen_path = false;
   }
-  Notify("REGEN_PATH","false");
+  Notify("GENPATH_REGENERATE","false");
 }
 
+  //Keeps track of number of waypoints visited within radius
   Notify("SCOREBOARD",m_score_count);
 
   AppCastingMOOSApp::PostReport();
@@ -208,7 +210,8 @@ bool GenPath::OnStartUp()
     }
     else if(param == "recalc_at_fueling") {
       if(value == "true")
-        Notify("FUEL_REM_BHV","endflag=REGEN_PATH=true");
+        Notify("FUEL_REM_BHV","endflag=GENPATH_REGENERATE=true");
+        recalc_at_fueling = true;
       handled = true;
     }
 
@@ -250,12 +253,13 @@ bool GenPath::buildReport()
   m_msgs << "Number of Assigned waypoints: " + to_string(m_mission_points.size()) << endl;
   m_msgs << "============================================" << endl;
   m_msgs << "Current Waypoint Index: "+ to_string(m_wpt_index) << endl;
+  m_msgs << "Waypoints Visited:                     " << endl;
+  m_msgs << to_string(m_score_count)                        << endl;
   m_msgs << "============================================" << endl;
   m_msgs << "Visit Radius: " + to_string(visit_radius) << endl;
   m_msgs << "Current Pos: "+ to_string(m_x_pos) + "," + to_string(m_y_pos) << endl;
   m_msgs << "============================================" << endl;
-  m_msgs << "Waypoints Visited:                     " << endl;
-  m_msgs << to_string(m_score_count)                        << endl;
+  m_msgs << "Recalc at Fueling: " + to_string(recalc_at_fueling) << endl;
   m_msgs << "============================================" << endl;
 
   return(true);

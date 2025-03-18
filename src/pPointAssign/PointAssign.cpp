@@ -3,8 +3,10 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: PointAssign.cpp                                 */
 /*    DATE: March 4th, 2025                                 */
-/*    UPDATE: March 7th, 2025                               */
+/*    UPDATE: March 18th, 2025                               */
 /************************************************************/
+/*Future implementation intentions: */
+/*Revise so that will work with any number of ships, not just "A" and "B"*/
 
 #include <iterator>
 #include "MBUtils.h"

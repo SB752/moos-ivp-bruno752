@@ -2,7 +2,8 @@
 /*    NAME: Stephen Bruno                                              */
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: GenPath.h                                          */
-/*    DATE: December 29th, 1963                             */
+/*    DATE: March 7th, 2025                             */
+/*    UPDATED: March 18th, 2025*/
 /************************************************************/
 
 #ifndef GenPath_HEADER
@@ -69,6 +70,8 @@ class GenPath : public AppCastingMOOSApp
    bool m_regen_path;
 
    int m_wpt_index;
+
+   bool recalc_at_fueling;
 
 
 };

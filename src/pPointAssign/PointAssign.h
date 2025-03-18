@@ -3,6 +3,7 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: PointAssign.h                                    */
 /*    DATE: March 4th, 2025                                  */
+/*    UPDATED: March 18th, 2025                              */
 /************************************************************/
 
 #ifndef PointAssign_HEADER
@@ -36,6 +37,9 @@ class PointAssign : public AppCastingMOOSApp
   std::vector<PointReader> m_visit_points;
   std::vector<PointReader> m_ship_points_A;
   std::vector<PointReader> m_ship_points_B;
+
+  //For future implementation
+  //std::vector<std::vector<PointReader>> m_ship_points;
 
   std::string m_assignment_method;
   std::string m_start_flag;
