@@ -6,6 +6,7 @@ initialize   RETURN  = false
 initialize   STATION_KEEP = false
 initialize   LOITER  = true
 initialize   AVOID   = true
+initialize   RECOVER = false
 
 set MODE = ACTIVE {
   DEPLOY = true
@@ -26,6 +27,11 @@ set MODE = LOITERING {
   LOITER = true
 } 
 
+set MODE = RECOVER {
+  MODE = LOITERING
+  RECOVER = true
+}
+
 
 //----------------------------------------------
 Behavior = BHV_Loiter
@@ -36,6 +42,9 @@ Behavior = BHV_Loiter
   updates   = UP_LOITER
   runflag   = VEHICLE_UNDERWAY = TRUE
   endflag   = VEHICLE_UNDERWAY = FALSE
+  
+  endflag = CIRCLE_COMPLETE = TRUE
+
 
    post_suffix = A
          speed = 1.3
@@ -46,6 +55,7 @@ Behavior = BHV_Loiter
   visual_hints = nextpt_color=white, nextpt_lcolor=khaki
   visual_hints = edge_color=orange, vertex_color=white
   visual_hints = edge_size=1, vertex_size=2
+
 }
 
 
@@ -83,5 +93,30 @@ Behavior = BHV_StationKeep
        transit_speed = 1.3
           swing_time = 7
         visual_hints = vertex_size=0, edge_color=gray50, label_color=invisible
+}
+
+//----------------------------------------------
+Behavior = BHV_Loiter
+{
+
+  name = recovery_loit
+
+  condition= MODE==RECOVER
+  updates = RECOVER_POS
+
+  endflag = RECOVER=false
+}
+
+//----------------------------------------------
+Behavior = BHV_Timer
+{
+  condition = (CIRCLE_COMPLETE == true)
+
+  perpetual = true
+
+  name = recover-timer
+  duration = 60
+
+  endflag = RECOVER = true
 }
 
