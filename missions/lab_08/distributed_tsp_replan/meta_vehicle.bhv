@@ -33,6 +33,30 @@ set MODE = TSP {
   TSP = true
 }
 
+//set MODE = TURN_TEST{
+//  MODE = ACTIVE
+//  TURN_TEST = true
+//}
+
+//----------------------------------------------
+//Behavior = TheLegRun
+//{
+//  name      = Turn_test
+ // pwt       = 100
+ // condition = (MODE==TURN_TEST)
+  
+
+ // perpetual = true
+
+//      speed = 1.2
+
+//      vx1 = 0,0
+ //     vx2 = 25,25
+
+ // endflag TURN_TEST=false
+
+//}
+
 //----------------------------------------------
 Behavior = BHV_Waypoint
 {
@@ -49,11 +73,9 @@ Behavior = BHV_Waypoint
      updates = UPDATES
       lead = 8
 
-
     wpt_index_var = PATH_INDEX
 
-    cycleflag = REGEN_PATH=true
-
+    cycleflag = GENPATH_REGENERATE=true
 }
 
 //----------------------------------------------
@@ -88,7 +110,7 @@ Behavior = BHV_Waypoint
       speed = 1.3
      radius = 3.0
   nm_radius = 15.0
-     points = $(START_POS)
+     points = 0,0
        lead = 8
 }
 

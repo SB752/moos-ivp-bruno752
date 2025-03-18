@@ -100,7 +100,7 @@ bool GenPath::OnNewMail(MOOSMSG_LIST &NewMail)
 
      }
 
-      else if(key == "REGEN_PATH"){
+      else if(key == "GENPATH_REGENERATE"){
         if(msg.GetString() == "true")
           m_regen_path = true;
 
@@ -140,7 +140,6 @@ bool GenPath::Iterate()
 
     findShortestPath(m_mission_points,m_visited_points_tracker,m_x_pos,m_y_pos);
     m_waypoints_published = true;
-
   }
 
   //Won't work because waypoint index different than mission_points index
@@ -234,7 +233,7 @@ void GenPath::registerVariables()
   Register("NAV_X",0);
   Register("NAV_Y",0);
   Register("PATH_INDEX",0);
-  Register("REGEN_PATH",0);
+  Register("GENPATH_REGENERATE",0);
 }
 
 

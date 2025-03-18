@@ -35,9 +35,11 @@ PointAssign::PointAssign()
   m_last_reading = false;
 
   m_sort_complete = false;
-  m_point_pub_complete = false;
+  m_point_pub_complete_A = false;
+  m_point_pub_complete_B = false;
 
-  m_export_count = 0;
+  m_export_count_A = 0;
+  m_export_count_B = 0;
 
   m_ship_A_ready = false;
   m_ship_B_ready = false;
@@ -158,33 +160,44 @@ bool PointAssign::Iterate()
 
   }
 
-  //Publish Points to MOOSDB
-  if(m_sort_complete && !m_point_pub_complete && m_ship_A_ready && m_ship_B_ready){ 
-    if(m_export_count == 0){
+  //Publish Points to MOOSDB Ship A
+  if(m_sort_complete && !m_point_pub_complete_A && m_ship_A_ready && m_ship_B_ready){ 
+    if(m_export_count_A == 0){
       Notify("VISIT_POINT_"+m_ship_names[0], m_start_flag);
-      Notify("VISIT_POINT_"+m_ship_names[1], m_start_flag);
     }
 
-    if(m_export_count < m_ship_points_A.size()){
-      postViewPoint(m_ship_points_A[m_export_count].get_x(), m_ship_points_A[m_export_count].get_y(), to_string(m_ship_points_A[m_export_count].get_id()), "red");
-      Notify("VISIT_POINT_"+m_ship_names[0], m_ship_points_A[m_export_count].get_string());
-    } else if(m_export_count == m_ship_points_A.size()){
+    if(m_export_count_A < m_ship_points_A.size()){
+      postViewPoint(m_ship_points_A[m_export_count_A].get_x(), m_ship_points_A[m_export_count_A].get_y(), to_string(m_ship_points_A[m_export_count_A].get_id()), "red");
+      Notify("VISIT_POINT_"+m_ship_names[0], m_ship_points_A[m_export_count_A].get_string());
+    } else if(m_export_count_A == m_ship_points_A.size()){
       Notify("VISIT_POINT_"+m_ship_names[0], m_end_flag);
     }
 
-    if(m_export_count < m_ship_points_B.size()){
-      postViewPoint(m_ship_points_B[m_export_count].get_x(), m_ship_points_B[m_export_count].get_y(), to_string(m_ship_points_B[m_export_count].get_id()), "blue");
-      Notify("VISIT_POINT_"+m_ship_names[1], m_ship_points_B[m_export_count].get_string());
-    } else if(m_export_count == m_ship_points_B.size()){
+    if(m_export_count_A >= m_ship_points_A.size()){
+      m_point_pub_complete_A = true;
+    }
+    m_export_count_A++;
+  }
+
+  //Publish Points to MOOSDB Ship A
+  if(m_sort_complete && !m_point_pub_complete_B && m_ship_B_ready){ 
+    if(m_export_count_B == 0){
+      Notify("VISIT_POINT_"+m_ship_names[1], m_start_flag);
+    }
+
+    if(m_export_count_B < m_ship_points_B.size()){
+      postViewPoint(m_ship_points_B[m_export_count_B].get_x(), m_ship_points_B[m_export_count_B].get_y(), to_string(m_ship_points_B[m_export_count_B].get_id()), "blue");
+      Notify("VISIT_POINT_"+m_ship_names[1], m_ship_points_B[m_export_count_B].get_string());
+    } else if(m_export_count_B == m_ship_points_B.size()){
       Notify("VISIT_POINT_"+m_ship_names[1], m_end_flag);
     }
 
-
-    if(m_export_count >= m_ship_points_A.size() && m_export_count >= m_ship_points_B.size()){
-      m_point_pub_complete = true;
+    if(m_export_count_B >= m_ship_points_B.size()){
+      m_point_pub_complete_B = true;
     }
-    m_export_count++;
+    m_export_count_B++;
   }
+
 
   AppCastingMOOSApp::PostReport();
   return(true);
@@ -296,6 +309,7 @@ void PointAssign::postViewPoint(double x, double y, string label, string color){
   point.set_param("vertex_size","4");
   Notify("VIEW_POINT",point.get_spec());
 }
+
   
 
 

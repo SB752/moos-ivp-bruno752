@@ -7,7 +7,7 @@ ProcessConfig = uSimMarine
   CommsTick = 10
   deprecated_ok = true
 
-  START_POS = $(START_POS), 180, 0
+  START_POS = $(START_POS), 0
   PREFIX    = NAV
 }
 

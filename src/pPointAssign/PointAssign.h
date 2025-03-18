@@ -48,9 +48,11 @@ class PointAssign : public AppCastingMOOSApp
  bool m_last_reading;
 
  bool m_sort_complete;
- bool m_point_pub_complete;
+ bool m_point_pub_complete_A;
+ bool m_point_pub_complete_B;
 
- int m_export_count;
+ int m_export_count_A;
+ int m_export_count_B;
 
  bool m_ship_A_ready;
  bool m_ship_B_ready;

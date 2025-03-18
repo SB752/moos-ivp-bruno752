@@ -2,8 +2,8 @@
 // ShoreSide Configuration File
 
 ServerHost = localhost
-ServerPort = $(VPORT)
-Community  = $(VNAME)
+ServerPort = $(MOOS_PORT)
+Community  = shoreside
 
 #include plug_origin_warp.moos
   
@@ -27,7 +27,29 @@ Processconfig = ANTLER
 
 #include plug_pShare.moos
 #include plug_pHostInfo.moos
-#include plug_pLogger.moos
+
+//--------------------------------------------------
+// pLogger Configuration Block (Created from Plugin)
+
+ProcessConfig = pLogger
+{
+  AppTick 	= 10
+  CommsTick 	= 10
+  
+  File		= LOG_SHORESIDE
+  PATH		= ./
+  AsyncLog 	= true
+  FileTimeStamp = true
+
+  // Log it all!!!!!
+  LogAuxSrc       = true
+  WildCardLogging = true 
+
+  WildCardOmitPattern = *_STATUS
+
+  CompressAlogs = false
+}
+
 
 //--------------------------------------------------
 // uProcessWatch Configuration Block
@@ -55,6 +77,7 @@ ProcessConfig = uFldShoreBroker
 
   bridge  = src=REFUEL_NEEDED_ALL, alias=REFUEL
   bridge  = src=VISIT_POINT_$V, alias=VISIT_POINT
+  bridge  = src=TURN_TEST, alias=TURN_TEST
 }
 
 //--------------------------------------------------------
@@ -93,6 +116,7 @@ ProcessConfig = pMarineViewer
 
   button_three = STATION  # STATION_KEEP_ALL=true
   button_four = REFUEL  # RETURN_ALL=true # REFUEL_NEEDED_ALL=true # STATION_KEEP_ALL=false
+  button_five = TURN_TEST # TURN_TEST=true
 }
 
 //--------------------------------------------------------
