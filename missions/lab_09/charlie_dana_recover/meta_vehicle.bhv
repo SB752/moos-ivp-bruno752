@@ -7,6 +7,7 @@ initialize   STATION_KEEP = false
 initialize   LOITER  = true
 initialize   AVOID   = true
 initialize   RECOVER = false
+initialize   REC_RESET = false
 
 set MODE = ACTIVE {
   DEPLOY = true
@@ -28,7 +29,7 @@ set MODE = LOITERING {
 } 
 
 set MODE = RECOVER {
-  MODE = LOITERING
+  MODE = ACTIVE
   RECOVER = true
 }
 
@@ -42,9 +43,6 @@ Behavior = BHV_Loiter
   updates   = UP_LOITER
   runflag   = VEHICLE_UNDERWAY = TRUE
   endflag   = VEHICLE_UNDERWAY = FALSE
-  
-  endflag = CIRCLE_COMPLETE = TRUE
-
 
    post_suffix = A
          speed = 1.3
@@ -56,24 +54,6 @@ Behavior = BHV_Loiter
   visual_hints = edge_color=orange, vertex_color=white
   visual_hints = edge_size=1, vertex_size=2
 
-}
-
-
-//----------------------------------------------
-Behavior = BHV_Waypoint
-{
-  name      = waypt_return
-  pwt       = 100
-  updates   = RETURN_UPDATES
-  condition = MODE==RETURNING
-  endflag   = STATION_KEEP = true
-
-      speed = 1.3
-     radius = 3.0
-  nm_radius = 15.0
-     points = $(START_POS)
-     repeat = 0
-       lead = 8
 }
 
 //----------------------------------------------
@@ -96,27 +76,37 @@ Behavior = BHV_StationKeep
 }
 
 //----------------------------------------------
-Behavior = BHV_Loiter
-{
-
-  name = recovery_loit
-
-  condition= MODE==RECOVER
-  updates = RECOVER_POS
-
-  endflag = RECOVER=false
-}
-
-//----------------------------------------------
 Behavior = BHV_Timer
 {
-  condition = (CIRCLE_COMPLETE == true)
+  name = recover-timer
 
   perpetual = true
 
-  name = recover-timer
-  duration = 60
+
+  duration = 600
+  duration_reset = REC_RESET
 
   endflag = RECOVER = true
+  endflag = LOITER = false
+}
+
+//----------------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = waypt_recover
+  pwt       = 100
+  updates   = RETURN_UPDATES
+  condition = MODE==RECOVER
+  cycleflag   = LOITER = true
+  cycleflag   = RECOVER = false
+
+  perpetual  = true
+
+      speed = 1.3
+     radius = 3.0
+  nm_radius = 15.0
+     points = 075, -100
+     repeat = 0
+       lead = 8
 }
 
