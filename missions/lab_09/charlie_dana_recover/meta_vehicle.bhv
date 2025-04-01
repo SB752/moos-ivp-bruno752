@@ -97,6 +97,7 @@ Behavior = BHV_Waypoint
   pwt       = 100
   updates   = RETURN_UPDATES
   condition = MODE==RECOVER
+  
   cycleflag   = LOITER = true
   cycleflag   = RECOVER = false
 

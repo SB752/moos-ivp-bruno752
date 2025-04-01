@@ -47,7 +47,7 @@ TARGET_LINK_LIBRARIES(BHV_SimpleWaypoint
    ${SYSTEM_LIBS} )
 
    #--------------------------------------------------------
-#                                      BHV_SimpleWaypoint
+#                                      BHV_Pulse
 #--------------------------------------------------------
 ADD_LIBRARY(BHV_Pulse SHARED 
 BHV_Pulse.cpp)
