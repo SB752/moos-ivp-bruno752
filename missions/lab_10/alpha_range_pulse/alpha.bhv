@@ -10,7 +10,7 @@ Behavior = BHV_Waypoint
   pwt       = 100
   condition = RETURN = false
   condition = DEPLOY = true
-  endflag   = RETURN = true
+  //endflag   = RETURN = true
 
 	endflag   = SUMMARY=speed=$[SPEED],time=$[DUR_RUN_TIME]
 	
@@ -96,6 +96,6 @@ Behavior=BHV_Pulse
   pwt  = 100
 
   pulse_range = 10
-  pulse_duration = 20
+  pulse_duration = 10
 }
 

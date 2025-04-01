@@ -95,7 +95,7 @@ Behavior=BHV_ZigLeg
   name = zigleg
   pwt  = 101
 
-  zig_angle = 45
+  zig_angle = -45
   zig_duration = 10
   //zig_delay = 5
 }
