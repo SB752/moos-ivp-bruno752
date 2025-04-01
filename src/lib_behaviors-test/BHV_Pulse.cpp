@@ -16,7 +16,7 @@ using namespace std;
 //---------------------------------------------------------------
 // Constructor
 
-BHV_Pulse::BHV_Pulse(IvPDomain domain) :
+BHV_ZigLeg::BHV_ZigLeg(IvPDomain domain) :
   IvPBehavior(domain)
 {
   // Provide a default behavior name
@@ -36,7 +36,7 @@ BHV_Pulse::BHV_Pulse(IvPDomain domain) :
 //---------------------------------------------------------------
 // Procedure: setParam()
 
-bool BHV_Pulse::setParam(string param, string val)
+bool BHV_ZigLeg::setParam(string param, string val)
 {
   // Convert the parameter to lower case for more general matching
   param = tolower(param);
@@ -68,7 +68,7 @@ bool BHV_Pulse::setParam(string param, string val)
 //            Good place to ensure all required params have are set.
 //            Or any inter-param relationships like a<b.
 
-void BHV_Pulse::onSetParamComplete()
+void BHV_ZigLeg::onSetParamComplete()
 {
 }
 
@@ -77,7 +77,7 @@ void BHV_Pulse::onSetParamComplete()
 //   Purpose: Invoked once upon helm start, even if this behavior
 //            is a template and not spawned at startup
 
-void BHV_Pulse::onHelmStart()
+void BHV_ZigLeg::onHelmStart()
 {
 }
 
@@ -85,14 +85,14 @@ void BHV_Pulse::onHelmStart()
 // Procedure: onIdleState()
 //   Purpose: Invoked on each helm iteration if conditions not met.
 
-void BHV_Pulse::onIdleState()
+void BHV_ZigLeg::onIdleState()
 {
 }
 
 //---------------------------------------------------------------
 // Procedure: onCompleteState()
 
-void BHV_Pulse::onCompleteState()
+void BHV_ZigLeg::onCompleteState()
 {
 }
 
@@ -100,7 +100,7 @@ void BHV_Pulse::onCompleteState()
 // Procedure: postConfigStatus()
 //   Purpose: Invoked each time a param is dynamically changed
 
-void BHV_Pulse::postConfigStatus()
+void BHV_ZigLeg::postConfigStatus()
 {
 }
 
@@ -108,7 +108,7 @@ void BHV_Pulse::postConfigStatus()
 // Procedure: onIdleToRunState()
 //   Purpose: Invoked once upon each transition from idle to run state
 
-void BHV_Pulse::onIdleToRunState()
+void BHV_ZigLeg::onIdleToRunState()
 {
 }
 
@@ -116,7 +116,7 @@ void BHV_Pulse::onIdleToRunState()
 // Procedure: onRunToIdleState()
 //   Purpose: Invoked once upon each transition from run to idle state
 
-void BHV_Pulse::onRunToIdleState()
+void BHV_ZigLeg::onRunToIdleState()
 {
 }
 
@@ -124,7 +124,7 @@ void BHV_Pulse::onRunToIdleState()
 // Procedure: onRunState()
 //   Purpose: Invoked each iteration when run conditions have been met.
 
-IvPFunction* BHV_Pulse::onRunState()
+IvPFunction* BHV_ZigLeg::onRunState()
 {
   // Part 1: Build the IvP function
   IvPFunction *ipf = 0;
