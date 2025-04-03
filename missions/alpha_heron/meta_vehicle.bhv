@@ -1,0 +1,110 @@
+//*******************************************************
+// Vehicle behavior configuration file
+
+initialize   DEPLOY = false
+initialize   RETURN = false
+initialize   STATION_KEEP = false
+
+set MODE = ACTIVE {
+  DEPLOY = true
+} INACTIVE
+
+set MODE = STATION-KEEPING {
+  MODE = ACTIVE
+  STATION_KEEP = true
+}
+
+set MODE = RETURNING {
+  MODE = ACTIVE
+  RETURN = true
+} TRAVERSING
+
+	
+//----------------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = waypt_survey
+  pwt       = 100
+  condition = MODE==TRAVERSING
+  endflag   = RETURN = true
+
+  updates   = WPT_UPDATE
+  perpetual = true
+
+                lead = 8
+         lead_damper = 1
+       lead_to_start = true
+              speed = $(SPEED)  // meters per second
+	      
+        capture_line = true
+      capture_radius = 2
+         slip_radius = 10
+	efficiency_measure = all
+
+	// Bigger home plate
+  // polygon = pts={-17,-26:52,1:69,-40:41,-67:1,-68} 
+
+
+	// Smaller home plate zones
+#ifdef ZONE east
+         polygon = pts={38,-37:64,-32:77,-16:59,11:23,-3}
+#elseifdef ZONE west
+         polygon = pts={-18,-30:-9,-57:16,-55:30,-42:12,-14}
+#else
+         polygon = pts={-2,-21:44,-2:56,-29:37,-48:10,-49}
+           order = reverse
+#endif
+	
+          repeat = 3
+
+    visual_hints = nextpt_color=yellow
+    visual_hints = nextpt_vertex_size=8
+    visual_hints = nextpt_lcolor=gray70
+    visual_hints = vertex_color=dodger_blue, edge_color=white
+    visual_hints = vertex_size=5, edge_size=1
+}
+
+//----------------------------------------------
+Behavior=BHV_Waypoint
+{
+  name       = waypt_return
+  pwt        = 100
+  condition  = MODE==RETURNING
+  perpetual  = true
+  updates    = RETURN_UPDATE
+  endflag    = RETURN = false
+  endflag    = DEPLOY = false
+  endflag    = MISSION = complete
+
+	   speed = $(SPEED)
+  capture_radius = 2.0
+     slip_radius = 8.0
+
+#ifdef ZONE east
+  points = 18,0
+#elseifdef ZONE west
+  points = 8,-6
+#else
+  points = 0,-10
+#endif
+
+ }
+
+//----------------------------------------------
+Behavior = BHV_StationKeep
+{
+  name         = station-keep
+  pwt          = 100
+  condition    = MODE==STATION-KEEPING
+
+     center_activate = true
+        inner_radius = 5
+        outer_radius = 10
+         outer_speed = 1.0
+
+       transit_speed = 0.5
+          swing_time = 7
+        visual_hints = vertex_size=0, edge_color=gray50
+}
+
+
