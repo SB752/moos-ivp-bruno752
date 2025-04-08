@@ -249,7 +249,6 @@ void GenRescue::findShortestPath(vector<PointReader> points, vector<bool> visit_
   
   if(m_rescue_count == points.size()){
     Notify("SURVEY_UPDATE","points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
-    //Notify("SURVEY_UPDATE","points = $(START_POS)");
     return;
   }
 
