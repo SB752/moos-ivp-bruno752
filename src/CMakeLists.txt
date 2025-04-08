@@ -21,6 +21,7 @@ ADD_SUBDIRECTORY(pXRelayTest)
 ADD_SUBDIRECTORY(pOdometry)
 ADD_SUBDIRECTORY(pPointAssign)
 ADD_SUBDIRECTORY(pGenPath)
+ADD_SUBDIRECTORY(pGenRescue)
 
 ##############################################################################
 #                           END of CMakeLists.txt
