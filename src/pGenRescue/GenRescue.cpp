@@ -158,7 +158,7 @@ bool GenRescue::Iterate()
 
   if(m_field_update){
     if(m_test_name == "abe"){
-      findShortestPath_2(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
+      findShortestPath_3(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
       Notify("PATH_TYPE","2");
     }
     else{
@@ -358,11 +358,12 @@ void GenRescue::findShortestPath_2(vector<PointReader> points, vector<bool> visi
         if(i == j){
           continue;
         }
-        double dist_2 = sqrt(pow(points_working_copy[j].get_x()-Prev_x,2)+pow(points_working_copy[j].get_y()-Prev_y,2));
+        double dist_2 = sqrt(pow(points_working_copy[j].get_x()-points_working_copy[i].get_x(),2)+pow(points_working_copy[j].get_y()-points_working_copy[i].get_y(),2));
         if(dist_1 + dist_2 <= min_dist){
           min_dist = dist_1 + dist_2;
           min_index = i;
       }
+
       }
       if(min_index = -1) //If only one point left, set min_index to that point
       min_index = 0;
@@ -379,5 +380,80 @@ void GenRescue::findShortestPath_2(vector<PointReader> points, vector<bool> visi
 
 }
 
+//------------------------------------------------------------
+// Procedure: findShortestPath_3()
+void GenRescue::findShortestPath_3(vector<PointReader> points, vector<bool> visit_status, double x, double y)
+{
+//This function works almost the same as findShortestPath, except it selects the next waypoint based on the next two closest points
+  //Checks if all points have been visited, if so, sends message to return to start
+  
+  if(m_rescue_count == points.size()){
+    Notify("SURVEY_UPDATE","points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
+    return;
+  }
 
+  //Some points still need to be visited, starts pathfinding
+  double Prev_x = 0.0;
+  double Prev_y = 0.0;
+  XYSegList waypoint_list;
+  vector<PointReader> points_working_copy;
+  vector<bool> visit_status_working_copy;
+  string waypoints_output = "points = ";
+  
+  //sets intial points for pathfinding, generates bool vector for tracking visit
+  //Only runs once
+  points_working_copy = points;
+  visit_status_working_copy = visit_status;
 
+  Prev_x = x;
+  Prev_y = y;
+
+  //Removes points that have been visited from working copy
+  for(int i=0; i<points_working_copy.size(); i++){
+    if(visit_status_working_copy[i]){
+      visit_status_working_copy.erase(visit_status_working_copy.begin()+i);
+      points_working_copy.erase(points_working_copy.begin()+i);
+      --i;
+    }
+  }
+      
+  //Sorts points by closest distance to previous point, starting with first point
+  //Only runs once per function call
+  while(!points_working_copy.empty()){
+    double min_dist = 1000000;
+    int min_index = -1;
+    for(int i=0; i<points_working_copy.size(); i++){ //finds closest point
+      double dist_1 = sqrt(pow(points_working_copy[i].get_x()-Prev_x,2)+pow(points_working_copy[i].get_y()-Prev_y,2));
+
+      for(int j=0; j<points_working_copy.size(); j++){
+        if(i == j){
+          continue;
+        }
+        double dist_2 = sqrt(pow(points_working_copy[j].get_x()-points_working_copy[i].get_x(),2)+pow(points_working_copy[j].get_y()-points_working_copy[i].get_y(),2));
+
+        for(int k=0; k<points_working_copy.size(); k++){
+          if(i == k || j == k){
+            continue;
+          }
+          double dist_3 = sqrt(pow(points_working_copy[k].get_x()-points_working_copy[j].get_x(),2)+pow(points_working_copy[k].get_y()-points_working_copy[j].get_y(),2));
+          if(dist_1 + dist_2 + dist_3 <= min_dist){
+            min_dist = dist_1 + dist_2 + dist_3;
+            min_index = i;
+        }
+
+      }
+      if(min_index = -1) //If only one point left, set min_index to that point
+      min_index = 0;
+    }
+    
+    waypoint_list.add_vertex(points_working_copy[min_index].get_x(),points_working_copy[min_index].get_y());
+    Prev_x = points_working_copy[min_index].get_x(); //Resets previous point to closest point for next loop iteration
+    Prev_y = points_working_copy[min_index].get_y();
+    points_working_copy.erase(points_working_copy.begin()+min_index); //removes closest point from list for remaining iterations
+}
+  //Sends waypoint list once all points proccessed
+  waypoints_output += waypoint_list.get_spec();
+  Notify("SURVEY_UPDATE",waypoints_output);
+
+}
+}
