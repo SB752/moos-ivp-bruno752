@@ -33,9 +33,11 @@ class GenRescue : public AppCastingMOOSApp
    void registerVariables();
 
    void findShortestPath(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
+   void findShortestPath_2(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
    void publishWaypoints();
 
  private: // Configuration variables
+ std::string m_test_name = "";
    
 
  private: // State variables

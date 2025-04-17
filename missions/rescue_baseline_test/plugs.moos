@@ -1,0 +1,126 @@
+<tag><origin_warp>
+MOOSTimeWarp = $(WARP)
+
+// Forest Lake
+// LatOrigin  = 43.825300 
+// LongOrigin = -70.330400 
+
+// MIT Sailing Pavilion                                                    
+LatOrigin  = 42.358456  
+LongOrigin = -71.087589 
+
+
+<tag><pHostInfo>
+//--------------------------------------------------
+// pHostInfo config block
+
+ProcessConfig = pHostInfo
+{
+  AppTick 	= 1
+  CommsTick = 1
+
+  default_hostip_force = $(IP_ADDR)
+}
+
+<tag><uSimMarine>
+//------------------------------------------------------
+// uSimMarine Config Block
+
+ProcessConfig = uSimMarine
+{
+  AppTick   = 10
+  CommsTick = 10
+
+	deprecated_ok = true
+  start_pos = $(START_POS), 180
+  prefix    = NAV
+}
+
+
+<tag><uProcessWatch>
+//------------------------------------------
+// uProcessWatch config block
+
+ProcessConfig = uProcessWatch                                   
+{                                                               
+  AppTick   = 4                                                 
+  CommsTick = 4  
+
+  watch_all = true
+  nowatch   = uXMS*
+  nowatch   = uMAC*
+  nowatch   = uPokeDB*
+  nowatch   = uQueryDB*
+
+	summary_wait = 5
+}
+	
+<tag><pShare>
+//---------------------------------------------------------
+// pShare config block
+
+ProcessConfig = pShare
+{
+  AppTick    = 5
+  CommsTick  = 5
+
+  input = route = localhost:$(PSHARE_PORT)
+}
+
+	
+<tag><iM300>
+//---------------------------------------------------------
+// iM300 config block
+
+ProcessConfig = iM300
+{
+  AppTick    = 10
+  CommsTick  = 10
+
+	comms_type = client
+  port       = 29500
+	ip_addr    = $(FSEAT_IP)
+
+	stale_thresh = 15
+	
+	max_rudder = 50
+	max_thrust = 100
+	drive_mode = normal
+	ignore_msg = $GPGLL, $GPGSV, $GPVTG, $GPZDA, $CPALT, $CPIMU
+	ignore_msg = $CPNVR, $GPGST, $CPRCM, $GNGLL, $GNGSV, $GNVTG,
+	ignore_msg = $GNZDA, $GLGSV, $GNGSA, $GNTXT
+	ignore_checksum_errors = true
+
+	max_appcast_events = 8
+  // max_appcast_run_warnings = 10
+
+	// heading_source options are gps, imu, or auto where auto uses imu
+	// when available and not timed out as defined in the stale_thresh
+	// parameter
+  heading_source = auto    
+
+	// threshold in seconds, default is 1.5
+	stale_thresh = 5
+	
+	nav_prefix     = NAV
+	gps_prefix		 = GPS
+	compass_prefix = COMPASS
+}
+
+	
+<tag><iM300Health>
+//------------------------------------------------
+// iM300Health config block
+
+ProcessConfig = iM300Health
+{
+   AppTick   = 4
+   CommsTick = 4
+   
+   StaleTime = 3.0         //  Time until messages are considered stale
+   MaxHeadingDelta = 5.0   //  Max Delta allowable between IMU and GPS
+
+   LowBattThresh  = 13.0
+   FullBattThresh = 14.4 
+}
+
