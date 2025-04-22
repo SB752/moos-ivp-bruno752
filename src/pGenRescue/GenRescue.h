@@ -3,7 +3,7 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: GenRescue.h                                          */
 /*    DATE: April 8th, 2025                             */
-/*    UPDATED: TBD    */
+/*    UPDATED: April 22nd, 2025    */
 /************************************************************/
 
 #ifndef GenRescue_HEADER
@@ -39,12 +39,16 @@ class GenRescue : public AppCastingMOOSApp
 
  private: // Configuration variables
  std::string m_test_name = "";
+ std::string m_waypoint_update_var = "SURVEY_UPDATE";
    
 
  private: // State variables
+ //Key Vectors
   std::vector<PointReader> m_swimmer_points; //Master list of Points
   std::vector<bool> m_swimmer_rescue_status; //List of points rescued by anyone
   std::vector<bool> m_swimmer_rescue_score; //List of points visited by this vehicle
+  std::vector<bool> m_swimmer_conceded; //List of points conceded by this vehicle
+  std::vector<double> m_swimmer_value; //List of values for each swimmer 
 
   double m_x_pos;
   double m_y_pos;
@@ -68,6 +72,8 @@ class GenRescue : public AppCastingMOOSApp
 
   double m_first_x_pos;
   double m_first_y_pos;
+
+  std::string m_path_type = "1";
 
 };
 

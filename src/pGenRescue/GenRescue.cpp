@@ -3,7 +3,7 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: GenRescue.cpp                                        */
 /*    DATE: April 8th, 2025                             */
-/*    UPDATED: TBD                             */
+/*    UPDATED: April 22nd, 2025                             */
 /************************************************************/
 
 #include <iterator>
@@ -158,12 +158,11 @@ bool GenRescue::Iterate()
 
   if(m_field_update){
     if(m_test_name == "abe"){
-      findShortestPath_3(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
-      Notify("PATH_TYPE","2");
+      findShortestPath_2(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
+      m_path_type = "2";
     }
     else{
       findShortestPath(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
-      Notify("PATH_TYPE","1");
     }
     m_field_update = false;
   }
@@ -204,6 +203,11 @@ bool GenRescue::OnStartUp()
       handled = true;
     }
 
+    else if(param == "waypoint_update_var") {
+      m_waypoint_update_var = value;
+      handled = true;
+    }
+
     if(!handled)
       reportUnhandledConfigWarning(orig);
 
@@ -237,6 +241,7 @@ bool GenRescue::buildReport()
   m_msgs << "Community: " + m_host_community << endl;
   m_msgs << "Total number of swimmers: " + to_string(m_swimmer_points.size()) << endl;
   m_msgs << "============================================" << endl;
+  m_msgs << "Path Type: " + m_path_type << endl;
   m_msgs << "Total Swimmers Rescued: " + to_string(m_rescue_count)  << endl;
   m_msgs << "My Swimmers Rescued: " + to_string(m_score_count) << endl;
   m_msgs << "============================================" << endl;
@@ -257,7 +262,7 @@ void GenRescue::findShortestPath(vector<PointReader> points, vector<bool> visit_
   //Checks if all points have been visited, if so, sends message to return to start
   
   if(m_rescue_count == points.size()){
-    Notify("SURVEY_UPDATE","points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
+    Notify(m_waypoint_update_var,"points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
     return;
   }
 
@@ -305,7 +310,7 @@ void GenRescue::findShortestPath(vector<PointReader> points, vector<bool> visit_
   }
   //Sends waypoint list once all points proccessed
   waypoints_output += waypoint_list.get_spec();
-  Notify("SURVEY_UPDATE",waypoints_output);
+  Notify(m_waypoint_update_var,waypoints_output);
 }
 
 //------------------------------------------------------------
@@ -317,7 +322,7 @@ void GenRescue::findShortestPath_2(vector<PointReader> points, vector<bool> visi
   //Checks if all points have been visited, if so, sends message to return to start
   
   if(m_rescue_count == points.size()){
-    Notify("SURVEY_UPDATE","points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
+    Notify(m_waypoint_update_var,"points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
     return;
   }
 
@@ -376,7 +381,7 @@ void GenRescue::findShortestPath_2(vector<PointReader> points, vector<bool> visi
 }
   //Sends waypoint list once all points proccessed
   waypoints_output += waypoint_list.get_spec();
-  Notify("SURVEY_UPDATE",waypoints_output);
+  Notify(m_waypoint_update_var,waypoints_output);
 
 }
 
@@ -388,7 +393,7 @@ void GenRescue::findShortestPath_3(vector<PointReader> points, vector<bool> visi
   //Checks if all points have been visited, if so, sends message to return to start
   
   if(m_rescue_count == points.size()){
-    Notify("SURVEY_UPDATE","points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
+    Notify(m_waypoint_update_var,"points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
     return;
   }
 
@@ -442,9 +447,11 @@ void GenRescue::findShortestPath_3(vector<PointReader> points, vector<bool> visi
         }
 
       }
-      if(min_index = -1) //If only one point left, set min_index to that point
-      min_index = 0;
+
     }
+
+    if(min_index = -1) //If only one point left, set min_index to that point
+    min_index = 0;
     
     waypoint_list.add_vertex(points_working_copy[min_index].get_x(),points_working_copy[min_index].get_y());
     Prev_x = points_working_copy[min_index].get_x(); //Resets previous point to closest point for next loop iteration
@@ -453,7 +460,7 @@ void GenRescue::findShortestPath_3(vector<PointReader> points, vector<bool> visi
 }
   //Sends waypoint list once all points proccessed
   waypoints_output += waypoint_list.get_spec();
-  Notify("SURVEY_UPDATE",waypoints_output);
+  Notify(m_waypoint_update_var,waypoints_output);
 
 }
 }
