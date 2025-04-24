@@ -157,13 +157,7 @@ bool GenRescue::Iterate()
   }
 
   if(m_field_update){
-    if(m_test_name == "abe"){
-      findShortestPath_2(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
-      m_path_type = "2";
-    }
-    else{
-      findShortestPath(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
-    }
+    findShortestPath(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
     m_field_update = false;
   }
   }
