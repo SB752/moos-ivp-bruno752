@@ -76,16 +76,28 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
       } 
 
     } else if(key == "FOUND_SWIMMER"){
-      m_field_update = true;
-      std::string s = msg.GetString();
-      std::string temp = biteStringX(s, '=');
-      int id = std::stoi(biteStringX(s, ','));
+      m_field_update = true; //Always true
+      //Intakes found swimmer message data as a point
+      PointReader found_point;
+      found_point.intake(msg.GetString());
 
+      //Tests against already registered swimmers
+      //If new found, sets status to true
+      bool new_swimmer = true;
       for (int i=0; i<m_swimmer_points.size(); i++){
-        if(id == m_swimmer_points[i].get_id()){
+        if(found_point.get_id() == m_swimmer_points[i].get_id()){
+          new_swimmer = false;
           m_swimmer_rescue_status[i] = true;
           break;
         }
+      }
+      
+      //if new swimmer, add to list
+      //including rescue status as "true"
+      if(new_swimmer){
+        m_swimmer_points.push_back(found_point);
+        m_swimmer_rescue_status.push_back(true);
+        m_swimmer_rescue_score.push_back(false);
       }
 
     }else if(key == "NAV_X"){

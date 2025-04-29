@@ -25,12 +25,18 @@ PointReader::~PointReader() {
 //"x=-25,y=-25,id=1"
 
 void PointReader::intake(std::string s){
-    std::string temp = biteStringX(s, '=');
-    m_x_val = std::stod(biteStringX(s, ','));
-    temp = biteStringX(s, '=');
-    m_y_val = std::stod(biteStringX(s, ','));
-    temp = biteStringX(s, '=');
-    m_id = stoi(s);
+    std::vector<std::string> svector = parseString(s, ',');
+    while(svector.size() >0){
+        std::string temp = biteStringX(svector[0], '=');
+        if(temp == "x"){
+            m_x_val = std::stod(biteStringX(svector[0], ','));
+        } else if(temp == "y"){
+            m_y_val = std::stod(biteStringX(svector[0], ','));
+        } else if(temp == "id"){
+            m_id = stoi(svector[0]);
+        }
+        svector.erase(svector.begin());
+    }
 }
 
 double PointReader::get_x(){
