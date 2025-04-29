@@ -3,7 +3,7 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: GenRescue.cpp                                        */
 /*    DATE: April 8th, 2025                             */
-/*    UPDATED: April 22nd, 2025                             */
+/*    UPDATED: April 29th, 2025                             */
 /************************************************************/
 
 #include <iterator>
@@ -168,8 +168,11 @@ bool GenRescue::Iterate()
     }
   }
 
+  //Determine Swimmer Centroid
+  m_swimmer_centroid = findSwimmerCentroid(m_swimmer_points,m_swimmer_rescue_status);
+
   if(m_field_update){
-    findShortestPath(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
+    findPath_Centroid(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
     m_field_update = false;
   }
   }
@@ -248,6 +251,7 @@ bool GenRescue::buildReport()
   m_msgs << "Total number of swimmers: " + to_string(m_swimmer_points.size()) << endl;
   m_msgs << "============================================" << endl;
   m_msgs << "Path Type: " + m_path_type << endl;
+  m_msgs << "Swimmer Centroid: " + doubleToString(m_swimmer_centroid[0]) + "," + doubleToString(m_swimmer_centroid[1]) << endl;
   m_msgs << "Total Swimmers Rescued: " + to_string(m_rescue_count)  << endl;
   m_msgs << "My Swimmers Rescued: " + to_string(m_score_count) << endl;
   m_msgs << "============================================" << endl;
@@ -469,4 +473,98 @@ void GenRescue::findShortestPath_3(vector<PointReader> points, vector<bool> visi
   Notify(m_waypoint_update_var,waypoints_output);
 
 }
+}
+
+//------------------------------------------------------------
+// Procedure: findPath_Centroid()
+
+void GenRescue::findPath_Centroid(vector<PointReader> points, vector<bool> visit_status, double x, double y)
+{
+
+  //Checks if all points have been visited, if so, sends message to return to start
+  
+  if(m_rescue_count == points.size()){
+    Notify(m_waypoint_update_var,"points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
+    return;
+  }
+
+  //Some points still need to be visited, starts pathfinding
+  double Prev_x = 0.0;
+  double Prev_y = 0.0;
+  XYSegList waypoint_list;
+  vector<PointReader> points_working_copy;
+  vector<bool> visit_status_working_copy;
+  string waypoints_output = "points = ";
+  
+  //sets intial points for pathfinding, generates bool vector for tracking visit
+  //Only runs once
+  points_working_copy = points;
+  visit_status_working_copy = visit_status;
+
+  Prev_x = x;
+  Prev_y = y;
+
+  //Removes points that have been visited from working copy
+  for(int i=0; i<points_working_copy.size(); i++){
+    if(visit_status_working_copy[i]){
+      visit_status_working_copy.erase(visit_status_working_copy.begin()+i);
+      points_working_copy.erase(points_working_copy.begin()+i);
+      --i;
+    }
+  }
+      
+  //Sorts points by closest distance to previous point, starting with first point
+  //Only runs once per function call
+  while(!points_working_copy.empty()){
+    double min_dist = 1000000;
+    int min_index = 0;
+    for(int i=0; i<points_working_copy.size(); i++){ //finds closest point
+      double dist_ship2pt = sqrt(pow(points_working_copy[i].get_x()-Prev_x,2)+pow(points_working_copy[i].get_y()-Prev_y,2));
+      double dist_pt2cent = sqrt(pow(points_working_copy[i].get_x()-m_swimmer_centroid[0],2)+pow(points_working_copy[i].get_y()-m_swimmer_centroid[1],2));
+      if(dist_ship2pt + dist_pt2cent <= min_dist){
+        min_dist = dist_ship2pt + dist_pt2cent;
+        min_index = i;
+      }
+    }
+    waypoint_list.add_vertex(points_working_copy[min_index].get_x(),points_working_copy[min_index].get_y());
+    Prev_x = points_working_copy[min_index].get_x(); //Resets previous point to closest point for next loop iteration
+    Prev_y = points_working_copy[min_index].get_y();
+    points_working_copy.erase(points_working_copy.begin()+min_index); //removes closest point from list for remaining iterations
+  }
+  //Sends waypoint list once all points proccessed
+  waypoints_output += waypoint_list.get_spec();
+  Notify(m_waypoint_update_var,waypoints_output);
+}
+
+//------------------------------------------------------------
+// Procedure: findPath_Centroid_2()
+
+
+//------------------------------------------------------------
+// Procedure: findSwimmerCentroid()
+std::vector<double> GenRescue::findSwimmerCentroid(std::vector<PointReader> points, std::vector<bool> visit_status)
+{
+  //Finds the centroid of all swimmers
+  double x_sum = 0;
+  double y_sum = 0;
+  int count = 0;
+
+  for(int i=0; i<points.size(); i++){
+    if(!visit_status[i]){
+      x_sum += points[i].get_x();
+      y_sum += points[i].get_y();
+      count++;
+    }
+  }
+
+  vector<double> centroid = {0,0};
+  if (count == 0){
+    return centroid;
+  }  else{
+  centroid[0] = (x_sum/count);
+  centroid[1] = (y_sum/count);
+  return centroid;
+  };
+
+
 }

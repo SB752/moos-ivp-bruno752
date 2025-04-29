@@ -3,7 +3,7 @@
 /*    ORGN: MIT, Cambridge MA                               */
 /*    FILE: GenRescue.h                                          */
 /*    DATE: April 8th, 2025                             */
-/*    UPDATED: April 22nd, 2025    */
+/*    UPDATED: April 29th, 2025    */
 /************************************************************/
 
 #ifndef GenRescue_HEADER
@@ -35,7 +35,8 @@ class GenRescue : public AppCastingMOOSApp
    void findShortestPath(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
    void findShortestPath_2(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
    void findShortestPath_3(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
-   void publishWaypoints();
+   void findPath_Centroid(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
+   std::vector<double> findSwimmerCentroid(std::vector<PointReader> points, std::vector<bool> visit_status);
 
  private: // Configuration variables
  std::string m_test_name = "";
@@ -48,7 +49,8 @@ class GenRescue : public AppCastingMOOSApp
   std::vector<bool> m_swimmer_rescue_status; //List of points rescued by anyone
   std::vector<bool> m_swimmer_rescue_score; //List of points visited by this vehicle
   std::vector<bool> m_swimmer_conceded; //List of points conceded by this vehicle
-  std::vector<double> m_swimmer_value; //List of values for each swimmer 
+  std::vector<double> m_swimmer_value; //List of values for each swimmer
+  std::vector<double> m_swimmer_centroid = {0,0}; //X and Y value for centroid of all unrescued swimmers
 
   double m_x_pos;
   double m_y_pos;
