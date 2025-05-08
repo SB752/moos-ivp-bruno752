@@ -203,6 +203,22 @@ bool GenRescue::Iterate()
   }
   }
 
+  //Find location 5 feet in front of enemy rescuer
+  double enemy_x = m_enemy_res_x_pos;
+  double enemy_y = m_enemy_res_y_pos;
+  double enemy_heading = m_enemy_res_heading;
+  double enemy_x_offset = enemy_x + 5*cos(degToRad(enemy_heading));
+  double enemy_y_offset = enemy_y + 5*sin(degToRad(enemy_heading));
+  //Post location to MOOSDB
+
+  std::string targ_mes = "x=" + to_string(enemy_x_offset) + ",y=" + to_string(enemy_y_offset);
+  NodeMessage targ_mes_node;
+  targ_mes_node.setSourceNode(m_my_name);
+  targ_mes_node.setDestNode(m_teammate_name);
+  targ_mes_node.setVarName("ENEMY_RES_LOC");
+  targ_mes_node.setStringVal(targ_mes);
+  Notify("NODE_MESSAGE_LOCAL",targ_mes_node.getSpec());
+
   AppCastingMOOSApp::PostReport();
   return(true);
 }
@@ -633,4 +649,8 @@ std::vector<double> GenRescue::findSwimmerCentroid(std::vector<PointReader> poin
   };
 
 
+}
+
+double GenRescue::degToRad(double degrees) {
+  return degrees * M_PI / 180.0;
 }

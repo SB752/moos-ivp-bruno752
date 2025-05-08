@@ -1,0 +1,7 @@
+
+To use the dynamic loading of behaviors, you need to set the following 
+environment variable, e.g., in your .bashrc file.
+
+setenv IVP_BEHAVIOR_DIRS '/home/bob/moos-ivp-extend/src/lib_behaviors-test'
+
+

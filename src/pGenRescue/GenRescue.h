@@ -15,6 +15,9 @@
 #include "XYSegList.h"
 #include "NodeRecord.h"
 #include "NodeRecordUtils.h"
+#include "NodeMessage.h"
+#include "UFieldUtils.h"
+#include <cmath>
 
 class GenRescue : public AppCastingMOOSApp
 {
@@ -39,6 +42,7 @@ class GenRescue : public AppCastingMOOSApp
    void findShortestPath_3(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
    void findPath_Centroid(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
    std::vector<double> findSwimmerCentroid(std::vector<PointReader> points, std::vector<bool> visit_status);
+   double degToRad(double degrees);
 
  private: // Configuration variables
  std::string m_waypoint_update_var = "SURVEY_UPDATE";

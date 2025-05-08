@@ -16,6 +16,7 @@ TARGET_LINK_LIBRARIES(pGenRescue
    ${MOOS_LIBRARIES}
    contacts
    geometry
+   ufield
    apputil
    mbutil
    m
