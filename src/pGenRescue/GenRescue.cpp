@@ -80,6 +80,13 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
       //Intakes found swimmer message data as a point
       PointReader found_point;
       found_point.intake(msg.GetString());
+      Notify("TEST_FINDER",found_point.get_finder());
+      Notify("TEST_F_STRING",found_point.get_string());
+
+      if(found_point.get_finder() != m_my_name){
+        m_enemy_rescuer = found_point.get_finder();
+        Notify("TEST_ENEMY",m_enemy_rescuer);
+      }
 
       //Tests against already registered swimmers
       //If new found, sets status to true
@@ -102,7 +109,7 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
 
     }else if(key == "NAV_X"){
       m_x_pos = msg.GetDouble();
-      m_test_name = msg.GetCommunity();
+      m_my_name = msg.GetCommunity();
       if(!m_first_x_rec){
         m_first_x_pos = msg.GetDouble();
         m_first_x_rec = true;
@@ -113,6 +120,24 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
       if(!m_first_y_rec){
         m_first_y_pos = msg.GetDouble();
         m_first_y_rec = true;
+      }
+
+      //
+    } else if (key == "NODE_REPORT_LOCAL"){
+      string report = msg.GetString();
+      NodeRecord new_node_record = string2NodeRecord(report);
+      m_team_color = new_node_record.getColor();
+
+    } else if (key == "NODE_REPORT"){
+      string report = msg.GetString();
+      NodeRecord new_node_record = string2NodeRecord(report);
+      string color = new_node_record.getColor();
+      if (color == m_team_color){
+        m_teammate_name = new_node_record.getName();
+      } else if(new_node_record.getName() == m_enemy_rescuer){
+        m_enemy_res_x_pos = new_node_record.getX();
+        m_enemy_res_y_pos = new_node_record.getY();
+        m_enemy_res_heading = new_node_record.getHeading();
       }
 
     } else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
@@ -238,6 +263,8 @@ void GenRescue::registerVariables()
   Register("FOUND_SWIMMER",0);
   Register("NAV_X",0);
   Register("NAV_Y",0);
+  Register("NODE_REPORT",0);
+  Register("NODE_REPORT_LOCAL",0);
 }
 
 
@@ -250,10 +277,16 @@ bool GenRescue::buildReport()
   m_msgs << "Community: " + m_host_community << endl;
   m_msgs << "Total number of swimmers: " + to_string(m_swimmer_points.size()) << endl;
   m_msgs << "============================================" << endl;
-  m_msgs << "Path Type: " + m_path_type << endl;
+  m_msgs << "My Team Color: " + m_team_color << endl;
+  m_msgs << "My Teammate: " + m_teammate_name << endl;
   m_msgs << "Swimmer Centroid: " + doubleToString(m_swimmer_centroid[0]) + "," + doubleToString(m_swimmer_centroid[1]) << endl;
   m_msgs << "Total Swimmers Rescued: " + to_string(m_rescue_count)  << endl;
   m_msgs << "My Swimmers Rescued: " + to_string(m_score_count) << endl;
+  m_msgs << "============================================" << endl;
+  m_msgs << "Enemy Rescuer: " + m_enemy_rescuer << endl;
+  Notify("TEST_ENEMY_2",m_enemy_rescuer);
+  m_msgs << "Enemy Rescuer Pos: " + to_string(m_enemy_res_x_pos) + "," + to_string(m_enemy_res_y_pos) << endl;
+  m_msgs << "Enemy Rescuer Heading: " + to_string(m_enemy_res_heading) << endl;
   m_msgs << "============================================" << endl;
   m_msgs << "Visit Radius: " + to_string(visit_radius) << endl;
   m_msgs << "Current Pos: "+ to_string(m_x_pos) + "," + to_string(m_y_pos) << endl;

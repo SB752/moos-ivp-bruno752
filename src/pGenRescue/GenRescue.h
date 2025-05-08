@@ -13,6 +13,8 @@
 #include"../pPointAssign/PointReader.h"
 #include "MBUtils.h"
 #include "XYSegList.h"
+#include "NodeRecord.h"
+#include "NodeRecordUtils.h"
 
 class GenRescue : public AppCastingMOOSApp
 {
@@ -39,8 +41,11 @@ class GenRescue : public AppCastingMOOSApp
    std::vector<double> findSwimmerCentroid(std::vector<PointReader> points, std::vector<bool> visit_status);
 
  private: // Configuration variables
- std::string m_test_name = "";
  std::string m_waypoint_update_var = "SURVEY_UPDATE";
+ std::string m_my_name = "";
+ std::string m_team_color = "";
+ std::string m_teammate_name = "";
+ std::string m_enemy_rescuer = "";
    
 
  private: // State variables
@@ -54,10 +59,10 @@ class GenRescue : public AppCastingMOOSApp
 
   double m_x_pos;
   double m_y_pos;
+  double m_heading;
 
   double m_rescue_count;
   double m_score_count;
-
 
   double Prev_x =  0.0;
   double Prev_y = 0.0;
@@ -76,6 +81,11 @@ class GenRescue : public AppCastingMOOSApp
   double m_first_y_pos;
 
   std::string m_path_type = "1";
+
+  //Other Team Variables
+  double m_enemy_res_x_pos;
+  double m_enemy_res_y_pos;
+  double m_enemy_res_heading;
 
 };
 

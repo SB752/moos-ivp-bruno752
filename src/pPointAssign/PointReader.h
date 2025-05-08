@@ -21,6 +21,7 @@ public:
   double get_x();
   double get_y();
   int get_id();
+  std::string get_finder();
 
   void set_x(double x);
   void set_y(double y);
@@ -33,6 +34,7 @@ private:
   double m_x_val;
   double m_y_val;
   int m_id;
+  std::string m_finder;
 
 };
 

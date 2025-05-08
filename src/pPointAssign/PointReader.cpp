@@ -13,6 +13,7 @@ PointReader::PointReader() {
     m_x_val = 0;
     m_y_val = 0;
     m_id = 0;
+    m_finder = "";
 }
 
 //---------------------------------------------------------
@@ -34,7 +35,10 @@ void PointReader::intake(std::string s){
             m_y_val = std::stod(biteStringX(svector[0], ','));
         } else if(temp == "id"){
             m_id = stoi(svector[0]);
+        } else if(temp == "finder"){
+            m_finder = (svector[0]);
         }
+
         svector.erase(svector.begin());
     }
 }
@@ -51,6 +55,10 @@ int PointReader::get_id(){
     return m_id;
 }
 
+std::string PointReader::get_finder(){
+    return m_finder;
+}
+
 void PointReader::set_x(double x){
     m_x_val = x;
 }
@@ -64,7 +72,7 @@ void PointReader::set_id(int id){
 }
 
 std::string PointReader::get_string(){
-    std::string s = "x=" + std::to_string(m_x_val) + ",y=" + std::to_string(m_y_val) + ",id=" + std::to_string(m_id);
+    std::string s = "x=" + std::to_string(m_x_val) + ",y=" + std::to_string(m_y_val) + ",id=" + std::to_string(m_id) +",finder=" + m_finder;
     return s;
 }
 
