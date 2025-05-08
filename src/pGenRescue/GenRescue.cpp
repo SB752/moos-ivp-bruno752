@@ -197,7 +197,8 @@ bool GenRescue::Iterate()
   m_swimmer_centroid = findSwimmerCentroid(m_swimmer_points,m_swimmer_rescue_status);
 
   if(m_field_update){
-    findPath_Centroid(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
+    //findPath_Centroid(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
+    findShortestPath(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
     m_field_update = false;
   }
   }
@@ -332,6 +333,22 @@ void GenRescue::findShortestPath(vector<PointReader> points, vector<bool> visit_
       points_working_copy.erase(points_working_copy.begin()+i);
       --i;
     }
+  }
+
+  //Finds point closest to enemy rescuer
+  double enemy_min_dist = 1000000;
+  int enemy_index = -1;
+  for(int i=0; i<points_working_copy.size(); i++){
+    double enemy_dist = sqrt(pow(points_working_copy[i].get_x()-m_enemy_res_x_pos,2)+pow(points_working_copy[i].get_y()-m_enemy_res_y_pos,2));
+    if(enemy_dist <= enemy_min_dist){
+      enemy_min_dist = enemy_dist;
+      enemy_index = i;
+    }
+  }
+
+  //if enemy rescuer closer than me to their closest point, remove point from the list
+  if(enemy_min_dist <= sqrt(pow(points_working_copy[enemy_index].get_x()-Prev_x,2)+pow(points_working_copy[enemy_index].get_y()-Prev_y,2))){
+    points_working_copy.erase(points_working_copy.begin()+enemy_index);
   }
       
   //Sorts points by closest distance to previous point, starting with first point
@@ -545,6 +562,22 @@ void GenRescue::findPath_Centroid(vector<PointReader> points, vector<bool> visit
       --i;
     }
   }
+
+    //Finds point closest to enemy rescuer
+    double enemy_min_dist = 1000000;
+    int enemy_index = -1;
+    for(int i=0; i<points_working_copy.size(); i++){
+      double enemy_dist = sqrt(pow(points_working_copy[i].get_x()-m_enemy_res_x_pos,2)+pow(points_working_copy[i].get_y()-m_enemy_res_y_pos,2));
+      if(enemy_dist <= enemy_min_dist){
+        enemy_min_dist = enemy_dist;
+        enemy_index = i;
+      }
+    }
+  
+    //if enemy rescuer closer than me to their closest point, remove point from the list
+    if(enemy_min_dist <= sqrt(pow(points_working_copy[enemy_index].get_x()-Prev_x,2)+pow(points_working_copy[enemy_index].get_y()-Prev_y,2))){
+      points_working_copy.erase(points_working_copy.begin()+enemy_index);
+    }
       
   //Sorts points by closest distance to previous point, starting with first point
   //Only runs once per function call
