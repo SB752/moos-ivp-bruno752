@@ -1,5 +1,5 @@
 /*****************************************************************/
-/*    NAME: M.Benjamin,                                          */
+/*    NAME: L. Gajski,                                          */
 /*    ORGN: Dept of Mechanical Eng / CSAIL, MIT Cambridge MA     */
 /*    FILE: BHV_Scout.h                                          */
 /*    DATE: April 30th 2022                                      */
@@ -27,6 +27,7 @@
 #include "IvPBehavior.h"
 #include "XYPoint.h"
 #include "XYPolygon.h"
+#include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"  // For MOOSTime[6]
 
 class BHV_Scout : public IvPBehavior {
 public:
@@ -40,8 +41,13 @@ public:
   
 protected:
   IvPFunction* buildFunction();
-  void         updateScoutPoint();
+  void         updateScoutPath();
+  void         rotateLoiter(double angle);
+  void         recenterLoiter();
+  //void         chaseOpp(double x, double y);
   void         postViewPoint(bool viewable=true);
+  void         postViewablePath();
+  void         vizRecenterMode();
 
 protected: // State variables
   double   m_osx;
@@ -54,9 +60,28 @@ protected: // State variables
 
   XYPolygon m_rescue_region;
 
+  double   m_rescue_height;
+  double   m_rescue_width;
+
+  std::vector<XYPoint> m_waypoints;  // Store search pattern waypoints
+  std::vector<XYPoint> m_recenter_points; // Store recenter points
+  unsigned int m_current_waypoint;   // Track current waypoint index
+
+  int m_cycle_count;
+
+  double m_total_rotation;
+  double m_rotation_angle;  // Track cumulative rotation
+
+  int m_recenter_count;     // Track 12-point cycle
+  int m_recenter_index;    // Track current recenter point
+
+  double m_last_rotate_time;
+  double m_last_recenter_time;
+
 protected: // Config variables
   double m_capture_radius;
   double m_desired_speed;
+  std::string m_recenter_mode;  // "oval" or "rectangle"
 
   std::string m_tmate;
 };

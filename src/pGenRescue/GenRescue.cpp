@@ -219,20 +219,24 @@ bool GenRescue::Iterate()
     targ_mes_node.setStringVal(targ_mes);
     Notify("NODE_MESSAGE_LOCAL",targ_mes_node.getSpec());
 
+    */
+
 
   //Send spoof message to enemy
-  bool rescue_perc = count(m_swimmer_rescue_status.begin(), m_swimmer_rescue_status.end(), true)/m_swimmer_points.size();
+  //bool rescue_perc = count(m_swimmer_rescue_status.begin(), m_swimmer_rescue_status.end(), true)/m_swimmer_points.size();
 
-  if(rescue_perc > 0.7){
+  //if(rescue_perc > 0.2){
 
+  /*
   NodeMessage cyberwar_node;
-  cyberwar_node.setSourceNode(m_my_name);
+  cyberwar_node.setSourceNode(m_enemy_rescuer);
   cyberwar_node.setDestNode(m_enemy_rescuer);
   cyberwar_node.setVarName("SURVEY_UPDATE");
   cyberwar_node.setStringVal("points = " + to_string(-100) + "," + to_string(-100));
   Notify("NODE_MESSAGE_LOCAL",cyberwar_node.getSpec());
-  }
   */
+  
+
 
   AppCastingMOOSApp::PostReport();
   return(true);
