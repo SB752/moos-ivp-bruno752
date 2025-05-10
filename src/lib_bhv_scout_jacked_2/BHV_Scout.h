@@ -52,6 +52,9 @@ protected: // State variables
   double   m_pty;
   bool     m_pt_set;
 
+  double   m_enemy_x;
+  double   m_enemy_y;
+
   XYPolygon m_rescue_region;
 
 protected: // Config variables

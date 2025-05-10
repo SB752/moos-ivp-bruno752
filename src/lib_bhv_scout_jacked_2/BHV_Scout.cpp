@@ -40,6 +40,7 @@ BHV_Scout::BHV_Scout(IvPDomain gdomain) :
   addInfoVars("NAV_X, NAV_Y");
   addInfoVars("RESCUE_REGION");
   addInfoVars("SCOUTED_SWIMMER");
+  addInfoVars("ENEMY_RES_LOC");
 }
 
 //---------------------------------------------------------------
@@ -106,6 +107,20 @@ IvPFunction *BHV_Scout::onRunState()
     postWMessage("No ownship X/Y info in info_buffer.");
     return(0);
   }
+
+  // Get Enemy Rescuer Location
+  string s = getBufferStringVal("ENEMY_RES_LOC");
+
+  std::vector<std::string> svector = parseString(s, ',');
+  while(svector.size() >0){
+      std::string temp = biteStringX(svector[0], '=');
+      if(temp == "x"){
+          m_enemy_x = std::stod(biteStringX(svector[0], ','));
+      } else if(temp == "y"){
+          m_enemy_y = std::stod(biteStringX(svector[0], ','));
+      }
+      svector.erase(svector.begin());
+    }
   
   // Part 2: Determine if the vehicle has reached the destination 
   // point and if so, declare completion.
@@ -153,18 +168,18 @@ void BHV_Scout::updateScoutPoint()
   
   cout << "updateScoutPoint(): " << endl;
   
-  double ptx = 0;
-  double pty = 0;
-  bool ok = randPointInPoly(m_rescue_region, ptx, pty);
-  if(!ok) {
-    postWMessage("Unable to generate scout point");
-    return;
-  }
+  //double ptx = 0;
+  //double pty = 0;
+  //bool ok = randPointInPoly(m_rescue_region, ptx, pty);
+  //if(!ok) {
+  //  postWMessage("Unable to generate scout point");
+  //  return;
+  //}
     
-  m_ptx = ptx;
-  m_pty = pty;
+  m_ptx = m_enemy_x;//ptx;
+  m_pty = m_enemy_y;//pty;
   m_pt_set = true;
-  string msg = "New pt: " + doubleToStringX(ptx) + "," + doubleToStringX(pty);
+  string msg = "New pt: " + doubleToStringX(m_enemy_x) + "," + doubleToStringX(m_enemy_y); //was ptx and pty
   postEventMessage(msg);
 }
 
