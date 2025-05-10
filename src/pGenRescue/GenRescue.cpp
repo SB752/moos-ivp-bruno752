@@ -80,12 +80,12 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
       //Intakes found swimmer message data as a point
       PointReader found_point;
       found_point.intake(msg.GetString());
-      Notify("TEST_FINDER",found_point.get_finder());
-      Notify("TEST_F_STRING",found_point.get_string());
+      //Notify("TEST_FINDER",found_point.get_finder());
+      //Notify("TEST_F_STRING",found_point.get_string());
 
       if(found_point.get_finder() != m_my_name){
         m_enemy_rescuer = found_point.get_finder();
-        Notify("TEST_ENEMY",m_enemy_rescuer);
+        //Notify("TEST_ENEMY",m_enemy_rescuer);
       }
 
       //Tests against already registered swimmers
@@ -202,22 +202,37 @@ bool GenRescue::Iterate()
     m_field_update = false;
   }
   }
+    /*
+    //Find location 5 feet in front of enemy rescuer
+    double enemy_x = m_enemy_res_x_pos;
+    double enemy_y = m_enemy_res_y_pos;
+    double enemy_heading = m_enemy_res_heading;
+    double enemy_x_offset = enemy_x + 20*cos(degToRad(enemy_heading));
+    double enemy_y_offset = enemy_y + 20*sin(degToRad(enemy_heading));
+    //Post location to MOOSDB
+  
+    std::string targ_mes = "x=" + to_string(enemy_x_offset) + ",y=" + to_string(enemy_y_offset);
+    NodeMessage targ_mes_node;
+    targ_mes_node.setSourceNode(m_my_name);
+    targ_mes_node.setDestNode(m_teammate_name);
+    targ_mes_node.setVarName("ENEMY_RES_LOC");
+    targ_mes_node.setStringVal(targ_mes);
+    Notify("NODE_MESSAGE_LOCAL",targ_mes_node.getSpec());
 
-  //Find location 5 feet in front of enemy rescuer
-  double enemy_x = m_enemy_res_x_pos;
-  double enemy_y = m_enemy_res_y_pos;
-  double enemy_heading = m_enemy_res_heading;
-  double enemy_x_offset = enemy_x + 5*cos(degToRad(enemy_heading));
-  double enemy_y_offset = enemy_y + 5*sin(degToRad(enemy_heading));
-  //Post location to MOOSDB
 
-  std::string targ_mes = "x=" + to_string(enemy_x_offset) + ",y=" + to_string(enemy_y_offset);
-  NodeMessage targ_mes_node;
-  targ_mes_node.setSourceNode(m_my_name);
-  targ_mes_node.setDestNode(m_teammate_name);
-  targ_mes_node.setVarName("ENEMY_RES_LOC");
-  targ_mes_node.setStringVal(targ_mes);
-  Notify("NODE_MESSAGE_LOCAL",targ_mes_node.getSpec());
+  //Send spoof message to enemy
+  bool rescue_perc = count(m_swimmer_rescue_status.begin(), m_swimmer_rescue_status.end(), true)/m_swimmer_points.size();
+
+  if(rescue_perc > 0.7){
+
+  NodeMessage cyberwar_node;
+  cyberwar_node.setSourceNode(m_my_name);
+  cyberwar_node.setDestNode(m_enemy_rescuer);
+  cyberwar_node.setVarName("SURVEY_UPDATE");
+  cyberwar_node.setStringVal("points = " + to_string(-100) + "," + to_string(-100));
+  Notify("NODE_MESSAGE_LOCAL",cyberwar_node.getSpec());
+  }
+  */
 
   AppCastingMOOSApp::PostReport();
   return(true);

@@ -1,5 +1,5 @@
 /*****************************************************************/
-/*    NAME: M.Benjamin,                                          */
+/*    NAME: L. Gajski,                                          */
 /*    ORGN: Dept of Mechanical Eng / CSAIL, MIT Cambridge MA     */
 /*    FILE: BHV_Scout.h                                          */
 /*    DATE: April 30th 2022                                      */
@@ -40,22 +40,35 @@ public:
   
 protected:
   IvPFunction* buildFunction();
-  void         updateScoutPoint();
+  void         updateScoutPath();
+  void         rotateLoiter(double angle);
+  void         recenterLoiter();
+  //void         chaseOpp(double x, double y);
   void         postViewPoint(bool viewable=true);
+  void         postViewablePath();
 
 protected: // State variables
   double   m_osx;
   double   m_osy;
   double   m_curr_time;
 
+  double   m_enemy_x;
+  double   m_enemy_y;
+
   double   m_ptx;
   double   m_pty;
   bool     m_pt_set;
 
-  double   m_enemy_x;
-  double   m_enemy_y;
-
   XYPolygon m_rescue_region;
+
+  double   m_rescue_height;
+  double   m_rescue_width;
+
+  std::vector<XYPoint> m_waypoints;  // Store search pattern waypoints
+  std::vector<XYPoint> m_recenter_points; // Store recenter points
+  unsigned int m_current_waypoint;   // Track current waypoint index
+
+  int m_cycle_count;
 
 protected: // Config variables
   double m_capture_radius;
