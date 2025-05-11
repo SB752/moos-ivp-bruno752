@@ -80,12 +80,9 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
       //Intakes found swimmer message data as a point
       PointReader found_point;
       found_point.intake(msg.GetString());
-      //Notify("TEST_FINDER",found_point.get_finder());
-      //Notify("TEST_F_STRING",found_point.get_string());
 
       if(found_point.get_finder() != m_my_name){
-        m_enemy_rescuer = found_point.get_finder();
-        //Notify("TEST_ENEMY",m_enemy_rescuer);
+        m_enemy_rescuer = found_point.get_finder();  //ID Enemy Rescuer
       }
 
       //Tests against already registered swimmers
@@ -126,21 +123,26 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
     } else if (key == "NODE_REPORT_LOCAL"){
       string report = msg.GetString();
       NodeRecord new_node_record = string2NodeRecord(report);
-      m_team_color = new_node_record.getColor();
+      m_team_color = new_node_record.getColor();  //Find my team color
 
     } else if (key == "NODE_REPORT"){
       string report = msg.GetString();
       NodeRecord new_node_record = string2NodeRecord(report);
       string color = new_node_record.getColor();
       if (color == m_team_color){
-        m_teammate_name = new_node_record.getName();
+        m_teammate_name = new_node_record.getName();  //Find my teammate
       } else if(new_node_record.getName() == m_enemy_rescuer){
         m_enemy_res_x_pos = new_node_record.getX();
         m_enemy_res_y_pos = new_node_record.getY();
         m_enemy_res_heading = new_node_record.getHeading();
       }
 
-    } else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
+    } else if (key == "SURVEY_UPDATE"){
+      if (msg.GetCommunity() != m_my_name){   //Defense against enemy spoofing
+        Notify(m_waypoint_update_var,m_waypoints_output);
+      }
+
+      } else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
    }
 	
@@ -227,16 +229,15 @@ bool GenRescue::Iterate()
 
   //if(rescue_perc > 0.2){
 
-  /*
-  NodeMessage cyberwar_node;
-  cyberwar_node.setSourceNode(m_enemy_rescuer);
-  cyberwar_node.setDestNode(m_enemy_rescuer);
-  cyberwar_node.setVarName("SURVEY_UPDATE");
-  cyberwar_node.setStringVal("points = " + to_string(-100) + "," + to_string(-100));
-  Notify("NODE_MESSAGE_LOCAL",cyberwar_node.getSpec());
-  */
-  
+  if(m_cyber_attack){
+    NodeMessage cyberwar_node;
+    cyberwar_node.setSourceNode(m_my_name);
+    cyberwar_node.setDestNode(m_enemy_rescuer);
+    cyberwar_node.setVarName("SURVEY_UPDATE");
+    cyberwar_node.setStringVal("points = " + to_string(100) + "," + to_string(-15));
+    Notify("NODE_MESSAGE_LOCAL",cyberwar_node.getSpec());
 
+  }
 
   AppCastingMOOSApp::PostReport();
   return(true);
@@ -278,6 +279,20 @@ bool GenRescue::OnStartUp()
       handled = true;
     }
 
+    else if (param == "cyber_attack"){
+      if(value == "false"){
+        m_cyber_attack = false;
+      }
+      handled = true;
+    }
+
+    else if (param == "cyber_defense"){
+      if(value == "false"){
+        m_cyber_defense = false;
+      }
+      handled = true;
+    }
+
     if(!handled)
       reportUnhandledConfigWarning(orig);
 
@@ -301,6 +316,9 @@ void GenRescue::registerVariables()
   Register("NAV_Y",0);
   Register("NODE_REPORT",0);
   Register("NODE_REPORT_LOCAL",0);
+  if(m_cyber_defense){
+    Register("SURVEY_UPDATE",0);
+  }
 }
 
 
@@ -351,7 +369,7 @@ void GenRescue::findShortestPath(vector<PointReader> points, vector<bool> visit_
   XYSegList waypoint_list;
   vector<PointReader> points_working_copy;
   vector<bool> visit_status_working_copy;
-  string waypoints_output = "points = ";
+  m_waypoints_output = "points = "; //reset output string
   
   //sets intial points for pathfinding, generates bool vector for tracking visit
   //Only runs once
@@ -404,8 +422,8 @@ void GenRescue::findShortestPath(vector<PointReader> points, vector<bool> visit_
     points_working_copy.erase(points_working_copy.begin()+min_index); //removes closest point from list for remaining iterations
   }
   //Sends waypoint list once all points proccessed
-  waypoints_output += waypoint_list.get_spec();
-  Notify(m_waypoint_update_var,waypoints_output);
+  m_waypoints_output += waypoint_list.get_spec();
+  Notify(m_waypoint_update_var,m_waypoints_output);
 }
 
 //------------------------------------------------------------
@@ -636,6 +654,88 @@ void GenRescue::findPath_Centroid(vector<PointReader> points, vector<bool> visit
   waypoints_output += waypoint_list.get_spec();
   Notify(m_waypoint_update_var,waypoints_output);
 }
+
+//------------------------------------------------------------
+// Procedure: findShortestPath()
+
+void GenRescue::findShortestPath_V2(vector<PointReader> points, vector<bool> visit_status, double x, double y)
+{
+
+  //Checks if all points have been visited, if so, sends message to return to start
+  
+  if(m_rescue_count == points.size()){
+    Notify(m_waypoint_update_var,"points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
+    return;
+  }
+
+  //Some points still need to be visited, starts pathfinding
+  double Prev_x = 0.0;
+  double Prev_y = 0.0;
+  XYSegList waypoint_list;
+  vector<PointReader> points_working_copy;
+  vector<bool> visit_status_working_copy;
+  m_waypoints_output = "points = "; //reset output string
+  
+  //sets intial points for pathfinding, generates bool vector for tracking visit
+  //Only runs once
+  points_working_copy = points;
+  visit_status_working_copy = visit_status;
+
+  Prev_x = x;
+  Prev_y = y;
+
+  //Removes points that have been visited from working copy
+  for(int i=0; i<points_working_copy.size(); i++){
+    if(visit_status_working_copy[i]){
+      visit_status_working_copy.erase(visit_status_working_copy.begin()+i);
+      points_working_copy.erase(points_working_copy.begin()+i);
+      --i;
+    }
+  }
+
+  //Finds point closest to enemy rescuer
+  double enemy_min_dist = 1000000;
+  int enemy_index = -1;
+  for(int i=0; i<points_working_copy.size(); i++){
+    double enemy_dist = sqrt(pow(points_working_copy[i].get_x()-m_enemy_res_x_pos,2)+pow(points_working_copy[i].get_y()-m_enemy_res_y_pos,2));
+    if(enemy_dist <= enemy_min_dist){
+      enemy_min_dist = enemy_dist;
+      enemy_index = i;
+    }
+  }
+
+  //if enemy rescuer closer than me to their closest point, remove point from the list
+  if(enemy_min_dist <= sqrt(pow(points_working_copy[enemy_index].get_x()-Prev_x,2)+pow(points_working_copy[enemy_index].get_y()-Prev_y,2))){
+    points_working_copy.erase(points_working_copy.begin()+enemy_index);
+  }
+      
+  //Sorts points by closest distance to previous point, starting with first point
+  //Only runs once per function call
+  while(!points_working_copy.empty()){
+    double min_dist = 1000000;
+    int min_index = 0;
+    for(int i=0; i<points_working_copy.size(); i++){ //finds closest point
+      double dist_1 = sqrt(pow(points_working_copy[i].get_x()-Prev_x,2)+pow(points_working_copy[i].get_y()-Prev_y,2));
+      for(int j=0; j<points_working_copy.size(); j++){ //finds closest point
+        double dist_2 = sqrt(pow(points_working_copy[j].get_x()-Prev_x,2)+pow(points_working_copy[j].get_y()-Prev_y,2));
+      if(dist_1 + dist_2 <= min_dist){
+        min_dist = dist_1 + dist_2;
+        min_index = i;
+      }
+    }
+  }
+    waypoint_list.add_vertex(points_working_copy[min_index].get_x(),points_working_copy[min_index].get_y());
+    Prev_x = points_working_copy[min_index].get_x(); //Resets previous point to closest point for next loop iteration
+    Prev_y = points_working_copy[min_index].get_y();
+    points_working_copy.erase(points_working_copy.begin()+min_index); //removes closest point from list for remaining iterations
+  }
+  //Sends waypoint list once all points proccessed
+  m_waypoints_output += waypoint_list.get_spec();
+  Notify(m_waypoint_update_var,m_waypoints_output);
+}
+
+
+
 
 //------------------------------------------------------------
 // Procedure: findPath_Centroid_2()

@@ -40,6 +40,7 @@ class GenRescue : public AppCastingMOOSApp
    void findShortestPath(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
    void findShortestPath_2(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
    void findShortestPath_3(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
+   void findShortestPath_V2(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
    void findPath_Centroid(std::vector<PointReader> points, std::vector<bool> visit_status, double x, double y);
    std::vector<double> findSwimmerCentroid(std::vector<PointReader> points, std::vector<bool> visit_status);
    double degToRad(double degrees);
@@ -50,6 +51,10 @@ class GenRescue : public AppCastingMOOSApp
  std::string m_team_color = "";
  std::string m_teammate_name = "";
  std::string m_enemy_rescuer = "";
+ std::string m_waypoints_output = "points = ";
+
+ bool m_cyber_attack = true;
+ bool m_cyber_defense = true;
    
 
  private: // State variables
