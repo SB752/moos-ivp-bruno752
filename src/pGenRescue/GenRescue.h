@@ -98,6 +98,10 @@ class GenRescue : public AppCastingMOOSApp
   double m_enemy_res_y_pos;
   double m_enemy_res_heading;
 
+
+  double m_iteration_start_time;
+  double m_iteration_time_test;
+
 };
 
 #endif 

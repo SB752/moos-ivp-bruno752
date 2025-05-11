@@ -144,6 +144,12 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
         Notify(m_waypoint_update_var,m_waypoints_output);
       }
 
+    } else if (key == "RETURN"){
+      if (msg.GetCommunity() != m_my_name && msg.GetCommunity() != "shoreside"){
+        m_cyber_under_attack = true;
+        //Notify("RETURN","false");
+        //Notify("SURVEY","true");
+      }
     } else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
    }
@@ -167,8 +173,8 @@ bool GenRescue::OnConnectToServer()
 bool GenRescue::Iterate()
 {
   AppCastingMOOSApp::Iterate();
+  m_iteration_start_time = MOOSTime();
 
-  Notify("GEN_PATH_READY",m_host_community);
  
   if(m_first_swimmer_recieved && !m_cyber_under_attack){  //Doesn't run until atleast one swimmer
   //Checks if current position is within visit radius of any waypoint, marks as visited if true
@@ -253,11 +259,17 @@ bool GenRescue::Iterate()
 
   if(m_cyber_under_attack){
     Notify(m_waypoint_update_var,m_waypoints_output);
+    Notify("CYBER_DEFENSE_ACTIVATED","true");
+    m_iteration_time_test = MOOSTime() - m_iteration_start_time;
+    Notify("TEST_ITERATION_SPEED", m_iteration_time_test);
     return(true);
     //m_cyber_under_attack = false;
   }
 
   AppCastingMOOSApp::PostReport();
+
+  m_iteration_time_test = MOOSTime() - m_iteration_start_time;
+  Notify("TEST_ITERATION_SPEED", m_iteration_time_test);
   return(true);
 }
 
@@ -335,6 +347,7 @@ void GenRescue::registerVariables()
   Register("NODE_REPORT_LOCAL",0);
   if(m_cyber_defense){
     Register("SURVEY_UPDATE",0);
+    //Register("RETURN",0);
   }
 }
 
@@ -674,14 +687,14 @@ void GenRescue::findPath_Centroid(vector<PointReader> points, vector<bool> visit
 }
 
 //------------------------------------------------------------
-// Procedure: findShortestPath()
+// Procedure: findShortestPath_V2()
 
 void GenRescue::findShortestPath_V2(vector<PointReader> points, vector<bool> visit_status, double x, double y)
 {
 
   //Checks if all points have been visited, if so, sends message to return to start
   
-  if(m_rescue_count == points.size()){
+  if(count(visit_status.begin(),visit_status.end(),true) == points.size()){
     Notify(m_waypoint_update_var,"points = "+to_string(m_first_x_pos)+","+to_string(m_first_y_pos));
     return;
   }
@@ -730,14 +743,35 @@ void GenRescue::findShortestPath_V2(vector<PointReader> points, vector<bool> vis
   //Sorts points by closest distance to previous point, starting with first point
   //Only runs once per function call
   while(!points_working_copy.empty()){
-    double min_dist = 1000000;
-    int min_index = 0;
+    double min_dist = 3000001;
+    double dist_1   = 1000000;
+    double dist_2   = 1000000;
+    double dist_3   = 1000000;
+    int min_index   = 0;
     for(int i=0; i<points_working_copy.size(); i++){ //finds closest point
-      double dist_1 = sqrt(pow(points_working_copy[i].get_x()-Prev_x,2)+pow(points_working_copy[i].get_y()-Prev_y,2));
+      if(points_working_copy.size() == 1){   //Shortcuts loop if only one point left
+        min_index = i;
+        break;
+      }
+      dist_1 = sqrt(pow(points_working_copy[i].get_x()-Prev_x,2)+pow(points_working_copy[i].get_y()-Prev_y,2));
       for(int j=0; j<points_working_copy.size(); j++){ //finds closest point
-        double dist_2 = sqrt(pow(points_working_copy[j].get_x()-Prev_x,2)+pow(points_working_copy[j].get_y()-Prev_y,2));
+        if(i == j){ //Prevents from measuring the same points repeatedly
+          continue;
+        }
+        if(points_working_copy.size() == 2){  //shortcuts loop if only two points left
+          min_index = i;
+          break;
+        }
+        dist_2 = sqrt(pow(points_working_copy[j].get_x()-Prev_x,2)+pow(points_working_copy[j].get_y()-Prev_y,2));
         for(int k=0; k<points_working_copy.size(); k++){ //finds closest point
-          double dist_3 = sqrt(pow(points_working_copy[k].get_x()-Prev_x,2)+pow(points_working_copy[k].get_y()-Prev_y,2));
+          if(i == k || j == k){ //Prevents from measuring the same points repeatedly
+            continue;
+          }
+          if(points_working_copy.size() == 3){  //shortcuts loop if only three points left
+            min_index = i;
+            break;
+          }
+          dist_3 = sqrt(pow(points_working_copy[k].get_x()-Prev_x,2)+pow(points_working_copy[k].get_y()-Prev_y,2));
           if(dist_1 + dist_2 + dist_3 <= min_dist){
             min_dist = dist_1 + dist_2 + dist_3;
             min_index = i;
