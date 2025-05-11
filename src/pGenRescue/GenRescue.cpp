@@ -80,7 +80,6 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
       //Intakes found swimmer message data as a point
       PointReader found_point;
       found_point.intake(msg.GetString());
-
       if(found_point.get_finder() != m_my_name){
         m_enemy_rescuer = found_point.get_finder();  //ID Enemy Rescuer
       }
@@ -104,7 +103,7 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
         m_swimmer_rescue_score.push_back(false);
       }
 
-    }else if(key == "NAV_X"){
+    } else if(key == "NAV_X"){
       m_x_pos = msg.GetDouble();
       m_my_name = msg.GetCommunity();
       if(!m_first_x_rec){
@@ -135,14 +134,17 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
         m_enemy_res_x_pos = new_node_record.getX();
         m_enemy_res_y_pos = new_node_record.getY();
         m_enemy_res_heading = new_node_record.getHeading();
+      } else {
+        m_enemy_scout = new_node_record.getName();  //Find enemy scout
       }
 
     } else if (key == "SURVEY_UPDATE"){
       if (msg.GetCommunity() != m_my_name){   //Defense against enemy spoofing
+        m_cyber_under_attack = true;
         Notify(m_waypoint_update_var,m_waypoints_output);
       }
 
-      } else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
+    } else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
    }
 	
@@ -168,18 +170,20 @@ bool GenRescue::Iterate()
 
   Notify("GEN_PATH_READY",m_host_community);
  
-  if(m_first_swimmer_recieved){  //Doesn't run until atleast one swimmer
-
+  if(m_first_swimmer_recieved && !m_cyber_under_attack){  //Doesn't run until atleast one swimmer
   //Checks if current position is within visit radius of any waypoint, marks as visited if true
   //Checked every iteration
+  /*
   for(int i=0; i<m_swimmer_points.size(); i++){
     if(sqrt(pow(m_swimmer_points[i].get_x()-m_x_pos,2)+pow(m_swimmer_points[i].get_y()-m_y_pos,2)) <= visit_radius && !m_swimmer_rescue_status[i]){
       m_swimmer_rescue_status[i] = true;
       m_swimmer_rescue_score[i] = true;
     }
   }
+    */
 
   //Determine Fleet Score
+  /*
   m_rescue_count = 0;
   for(int i=0; i<m_swimmer_points.size(); i++){
     if(m_swimmer_rescue_status[i]){
@@ -194,17 +198,21 @@ bool GenRescue::Iterate()
       m_score_count++;
     }
   }
+    */
 
+    /*
   //Determine Swimmer Centroid
   m_swimmer_centroid = findSwimmerCentroid(m_swimmer_points,m_swimmer_rescue_status);
+  */
 
   if(m_field_update){
     //findPath_Centroid(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
-    findShortestPath(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
+    findShortestPath_V2(m_swimmer_points,m_swimmer_rescue_status,m_x_pos,m_y_pos);
     m_field_update = false;
   }
   }
-    /*
+    
+  /*
     //Find location 5 feet in front of enemy rescuer
     double enemy_x = m_enemy_res_x_pos;
     double enemy_y = m_enemy_res_y_pos;
@@ -225,18 +233,28 @@ bool GenRescue::Iterate()
 
 
   //Send spoof message to enemy
-  //bool rescue_perc = count(m_swimmer_rescue_status.begin(), m_swimmer_rescue_status.end(), true)/m_swimmer_points.size();
-
-  //if(rescue_perc > 0.2){
-
   if(m_cyber_attack){
-    NodeMessage cyberwar_node;
-    cyberwar_node.setSourceNode(m_my_name);
-    cyberwar_node.setDestNode(m_enemy_rescuer);
-    cyberwar_node.setVarName("SURVEY_UPDATE");
-    cyberwar_node.setStringVal("points = " + to_string(100) + "," + to_string(-15));
-    Notify("NODE_MESSAGE_LOCAL",cyberwar_node.getSpec());
+    NodeMessage cyberwar_node_targ1;
+    cyberwar_node_targ1.setSourceNode(m_enemy_scout);  
+    cyberwar_node_targ1.setDestNode(m_enemy_rescuer);
+    cyberwar_node_targ1.setVarName("SURVEY_UPDATE");
+    cyberwar_node_targ1.setStringVal("points = " + to_string(100) + "," + to_string(-15));
+    Notify("NODE_MESSAGE_LOCAL",cyberwar_node_targ1.getSpec());
 
+    /*  //Doesn't work unless enemy scout behavior set up just right
+    NodeMessage cyberwar_node_targ2;
+    cyberwar_node_targ2.setSourceNode(m_enemy_rescuer);  
+    cyberwar_node_targ2.setDestNode(m_enemy_scout);
+    cyberwar_node_targ2.setVarName("SCOUT_UPDATE");
+    cyberwar_node_targ2.setStringVal("DESIRED_SPEED = 0");
+    Notify("NODE_MESSAGE_LOCAL",cyberwar_node_targ2.getSpec());
+    */
+  }
+
+  if(m_cyber_under_attack){
+    Notify(m_waypoint_update_var,m_waypoints_output);
+    return(true);
+    //m_cyber_under_attack = false;
   }
 
   AppCastingMOOSApp::PostReport();
@@ -299,7 +317,6 @@ bool GenRescue::OnStartUp()
   }
   
   registerVariables();
-  Notify("GEN_PATH_READY",m_host_community);
   return(true);
 }
 
@@ -331,20 +348,21 @@ bool GenRescue::buildReport()
   m_msgs << "Community: " + m_host_community << endl;
   m_msgs << "Total number of swimmers: " + to_string(m_swimmer_points.size()) << endl;
   m_msgs << "============================================" << endl;
+  //m_msgs << "Swimmer Centroid: " + doubleToString(m_swimmer_centroid[0]) + "," + doubleToString(m_swimmer_centroid[1]) << endl;
+  //m_msgs << "Total Swimmers Rescued: " + to_string(m_rescue_count)  << endl;
+  //m_msgs << "My Swimmers Rescued: " + to_string(m_score_count) << endl;
+  m_msgs << "============================================" << endl;
   m_msgs << "My Team Color: " + m_team_color << endl;
   m_msgs << "My Teammate: " + m_teammate_name << endl;
-  m_msgs << "Swimmer Centroid: " + doubleToString(m_swimmer_centroid[0]) + "," + doubleToString(m_swimmer_centroid[1]) << endl;
-  m_msgs << "Total Swimmers Rescued: " + to_string(m_rescue_count)  << endl;
-  m_msgs << "My Swimmers Rescued: " + to_string(m_score_count) << endl;
   m_msgs << "============================================" << endl;
   m_msgs << "Enemy Rescuer: " + m_enemy_rescuer << endl;
-  Notify("TEST_ENEMY_2",m_enemy_rescuer);
   m_msgs << "Enemy Rescuer Pos: " + to_string(m_enemy_res_x_pos) + "," + to_string(m_enemy_res_y_pos) << endl;
   m_msgs << "Enemy Rescuer Heading: " + to_string(m_enemy_res_heading) << endl;
   m_msgs << "============================================" << endl;
+  m_msgs << "============================================" << endl;
   m_msgs << "Visit Radius: " + to_string(visit_radius) << endl;
   m_msgs << "Current Pos: "+ to_string(m_x_pos) + "," + to_string(m_y_pos) << endl;
-  m_msgs << "============================================" << endl;
+
   m_msgs << "============================================" << endl;
 
   return(true);
@@ -718,12 +736,15 @@ void GenRescue::findShortestPath_V2(vector<PointReader> points, vector<bool> vis
       double dist_1 = sqrt(pow(points_working_copy[i].get_x()-Prev_x,2)+pow(points_working_copy[i].get_y()-Prev_y,2));
       for(int j=0; j<points_working_copy.size(); j++){ //finds closest point
         double dist_2 = sqrt(pow(points_working_copy[j].get_x()-Prev_x,2)+pow(points_working_copy[j].get_y()-Prev_y,2));
-      if(dist_1 + dist_2 <= min_dist){
-        min_dist = dist_1 + dist_2;
-        min_index = i;
+        for(int k=0; k<points_working_copy.size(); k++){ //finds closest point
+          double dist_3 = sqrt(pow(points_working_copy[k].get_x()-Prev_x,2)+pow(points_working_copy[k].get_y()-Prev_y,2));
+          if(dist_1 + dist_2 + dist_3 <= min_dist){
+            min_dist = dist_1 + dist_2 + dist_3;
+            min_index = i;
+          }
+        }
       }
     }
-  }
     waypoint_list.add_vertex(points_working_copy[min_index].get_x(),points_working_copy[min_index].get_y());
     Prev_x = points_working_copy[min_index].get_x(); //Resets previous point to closest point for next loop iteration
     Prev_y = points_working_copy[min_index].get_y();

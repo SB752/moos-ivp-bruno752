@@ -51,10 +51,12 @@ class GenRescue : public AppCastingMOOSApp
  std::string m_team_color = "";
  std::string m_teammate_name = "";
  std::string m_enemy_rescuer = "";
+ std::string m_enemy_scout = "";
  std::string m_waypoints_output = "points = ";
 
  bool m_cyber_attack = true;
  bool m_cyber_defense = true;
+ bool m_cyber_under_attack = false;
    
 
  private: // State variables
