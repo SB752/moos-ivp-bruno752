@@ -57,7 +57,9 @@ class GenRescue : public AppCastingMOOSApp
  bool m_cyber_attack = true;
  bool m_cyber_defense = true;
  bool m_cyber_under_attack = false;
-   
+
+ double m_turn_radius = 3;
+  
 
  private: // State variables
  //Key Vectors
@@ -94,13 +96,16 @@ class GenRescue : public AppCastingMOOSApp
   std::string m_path_type = "1";
 
   //Other Team Variables
+  bool m_enemy_rescuer_identified = false;
   double m_enemy_res_x_pos;
   double m_enemy_res_y_pos;
   double m_enemy_res_heading;
+  double m_enemy_res_speed;
 
-
-  double m_iteration_start_time;
-  double m_iteration_time_test;
+  double m_enemy_scout_x_pos;
+  double m_enemy_scout_y_pos;
+  double m_enemy_scout_heading;
+  bool m_enemy_scout_turned = false;
 
 };
 

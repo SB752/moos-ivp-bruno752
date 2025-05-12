@@ -32,7 +32,7 @@ BHV_Scout::BHV_Scout(IvPDomain gdomain) :
 
   // All distances are in meters, all speed in meters per second
   // Default values for configuration parameters 
-  m_desired_speed  = 1.2; 
+  m_desired_speed  = 1; 
   m_capture_radius = 10;
   m_recenter_mode == "oval";
 
@@ -48,9 +48,9 @@ BHV_Scout::BHV_Scout(IvPDomain gdomain) :
   m_total_rotation = 0;
   m_rotation_angle = 0;
 
-  m_curr_time = 0;
-  m_last_rotate_time = MOOSTime();    // Initialize with current time[2]
-  m_last_recenter_time = MOOSTime();  // Prevent NaN in time calculations[4]
+  //m_curr_time = 0;
+  //m_last_rotate_time = MOOSTime();    // Initialize with current time[2]
+  //m_last_recenter_time = MOOSTime();  // Prevent NaN in time calculations[4]
   
   addInfoVars("NAV_X, NAV_Y");
   addInfoVars("RESCUE_REGION");
@@ -119,7 +119,7 @@ void BHV_Scout::onIdleState()
 
 IvPFunction* BHV_Scout::onRunState() 
 {
-    m_curr_time = MOOSTime();
+    //m_curr_time = MOOSTime();
 
     // Get vehicle position
     bool ok1, ok2;
@@ -134,7 +134,7 @@ IvPFunction* BHV_Scout::onRunState()
   if (!m_pt_set) {
       updateScoutPath();
   }
-
+/*
       // Handle 150-second rotation timer
       if((m_curr_time - m_last_rotate_time) >= 150) {
         rotateLoiter(m_total_rotation + 30.0);  // Continuous rotation[4]
@@ -151,7 +151,7 @@ IvPFunction* BHV_Scout::onRunState()
         m_last_recenter_time = m_curr_time;
         vizRecenterMode();
     }
-
+*/
 
     // Check if we've reached current waypoint
     double dist = hypot((m_ptx-m_osx), (m_pty-m_osy));
@@ -162,38 +162,14 @@ IvPFunction* BHV_Scout::onRunState()
         if(m_current_waypoint >= m_waypoints.size()) {
             m_current_waypoint = 0;
 
-        // Option 1: Do one complete loiter cycle, rotate 30, do another cycle, then recenter
-            
-          /*
 
-            if(m_cycle_count == 0) {
-              rotateLoiter(30.0); // Rotate for second cycle[1]
-              m_cycle_count = 1;
-            } else {
-                rotateLoiter(-30.0); // Reset rotation[1]
-                recenterLoiter(); // Move to next oval point[7]
-                m_cycle_count = 0;
-            }
+        // No rotation at all to cover more new, areas in less time
 
-          */
-
-        // Option 2: Recenter to the next point on the oval and rotate 30 degrees every time
-
-          /*
-
-            recenterLoiter(); // Move to next oval point[7]
-            rotateLoiter(m_total_rotation + 30.0); // Cumulative rotation[1]
-            m_total_rotation += 30.0; // Prepare for next cycle 
-
-          */
-
-        // Option 3: No rotation at all to cover more new, areas in less time
-
-          /*
+          // /*
 
             recenterLoiter(); // Move to next oval point[7]
 
-          */
+          //*/
         }
         
         // Update target waypoint
@@ -341,20 +317,22 @@ void BHV_Scout::updateScoutPath()
   // Define the Victor Sierra search pattern, always moving clockwise
   // First triangle: Center → Top Left → Top Right → Center
   m_waypoints.push_back(vs_center);       // Start at center
-  m_waypoints.push_back(bottom_right);     // Move to top left
-  m_waypoints.push_back(bottom_left);    // Move to top right
+  m_waypoints.push_back(bottom_left);     // Move to top left
+  m_waypoints.push_back(bottom_right);    // Move to top right
   m_waypoints.push_back(vs_center);       // Back to center
   
   // Second triangle: Center → Bottom Right → Bottom Left → Center
-  m_waypoints.push_back(top_right); // Move to bottom left
-  m_waypoints.push_back(middle_right);  // Move to middle left
+  m_waypoints.push_back(top_left); // Move to bottom left
+  m_waypoints.push_back(top_right);  // Move to middle left
   m_waypoints.push_back(vs_center);       // Back to center
   
+  /*
   // Third triangle: Center → Middle Left → Middle Right → Center
   m_waypoints.push_back(middle_left);  // Move to middle right
   m_waypoints.push_back(top_left); // Move to bottom right
   m_waypoints.push_back(vs_center);       // Back to center
-  
+  */
+
   // Initialize waypoint tracking
   m_current_waypoint = 0;
   m_ptx = m_waypoints[0].x();
@@ -370,7 +348,7 @@ void BHV_Scout::updateScoutPath()
     string label = "VS_pt" + intToString(i);
     
     point.set_label(label);
-    if (i == 0 || i == 3 || i == 6 || i == 9) {
+    if (i == 0 || i == 3 || i == 6) {
       // Center points
       point.set_color("vertex", "red");
       point.set_vertex_size(5);
@@ -498,18 +476,13 @@ void BHV_Scout::recenterLoiter()
   // Define the Victor Sierra search pattern, always moving clockwise
   // First triangle: Center → Top Left → Top Right → Center
   m_waypoints.push_back(vs_center);       // Start at center
-  m_waypoints.push_back(bottom_right);     // Move to top left
-  m_waypoints.push_back(bottom_left);    // Move to top right
+  m_waypoints.push_back(bottom_left);     // Move to top left
+  m_waypoints.push_back(bottom_right);    // Move to top right
   m_waypoints.push_back(vs_center);       // Back to center
   
   // Second triangle: Center → Bottom Right → Bottom Left → Center
-  m_waypoints.push_back(top_right); // Move to bottom left
-  m_waypoints.push_back(middle_right);  // Move to middle left
-  m_waypoints.push_back(vs_center);       // Back to center
-  
-  // Third triangle: Center → Middle Left → Middle Right → Center
-  m_waypoints.push_back(middle_left);  // Move to middle right
-  m_waypoints.push_back(top_left); // Move to bottom right
+  m_waypoints.push_back(top_left); // Move to bottom left
+  m_waypoints.push_back(top_right);  // Move to middle left
   m_waypoints.push_back(vs_center);       // Back to center
   
   // Reset waypoint tracking

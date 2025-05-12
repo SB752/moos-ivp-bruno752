@@ -27,7 +27,7 @@
 #include "IvPBehavior.h"
 #include "XYPoint.h"
 #include "XYPolygon.h"
-#include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"  // For MOOSTime[6]
+// #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"  // For MOOSTime[6]
 
 class BHV_Scout : public IvPBehavior {
 public:
@@ -75,8 +75,8 @@ protected: // State variables
   int m_recenter_count;     // Track 12-point cycle
   int m_recenter_index;    // Track current recenter point
 
-  double m_last_rotate_time;
-  double m_last_recenter_time;
+  //double m_last_rotate_time;
+  //double m_last_recenter_time;
 
 protected: // Config variables
   double m_capture_radius;
