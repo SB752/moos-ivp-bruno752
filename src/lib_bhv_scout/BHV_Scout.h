@@ -27,7 +27,6 @@
 #include "IvPBehavior.h"
 #include "XYPoint.h"
 #include "XYPolygon.h"
-// #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"  // For MOOSTime[6]
 
 class BHV_Scout : public IvPBehavior {
 public:
@@ -44,7 +43,6 @@ protected:
   void         updateScoutPath();
   void         rotateLoiter(double angle);
   void         recenterLoiter();
-  //void         chaseOpp(double x, double y);
   void         postViewPoint(bool viewable=true);
   void         postViewablePath();
   void         vizRecenterMode();
@@ -70,18 +68,16 @@ protected: // State variables
   int m_cycle_count;
 
   double m_total_rotation;
-  double m_rotation_angle;  // Track cumulative rotation
 
-  int m_recenter_count;     // Track 12-point cycle
   int m_recenter_index;    // Track current recenter point
 
-  //double m_last_rotate_time;
-  //double m_last_recenter_time;
+  double m_last_recenter_time;
 
 protected: // Config variables
   double m_capture_radius;
   double m_desired_speed;
-  std::string m_recenter_mode;  // "oval" or "rectangle"
+  std::string m_recenter_mode;  // "oval" , "rectangle" , "x"
+  std::string m_loiter_mode;    // "vs" - vector sierra , "hg" - hourglass
 
   std::string m_tmate;
 };

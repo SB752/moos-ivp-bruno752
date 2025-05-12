@@ -34,7 +34,8 @@ BHV_Scout::BHV_Scout(IvPDomain gdomain) :
   // Default values for configuration parameters 
   m_desired_speed  = 1; 
   m_capture_radius = 10;
-  m_recenter_mode == "oval";
+  m_recenter_mode = "x";
+  m_loiter_mode = "hg";
 
   m_pt_set = false;
 
@@ -42,15 +43,12 @@ BHV_Scout::BHV_Scout(IvPDomain gdomain) :
   m_rescue_width  = 0;
 
   m_current_waypoint = 0;
-  m_cycle_count = 0;
   m_recenter_index = 0;
 
   m_total_rotation = 0;
-  m_rotation_angle = 0;
 
-  //m_curr_time = 0;
-  //m_last_rotate_time = MOOSTime();    // Initialize with current time[2]
-  //m_last_recenter_time = MOOSTime();  // Prevent NaN in time calculations[4]
+  m_curr_time = 0;
+  m_last_recenter_time = 0;
   
   addInfoVars("NAV_X, NAV_Y");
   addInfoVars("RESCUE_REGION");
@@ -75,8 +73,17 @@ bool BHV_Scout::setParam(string param, string val)
   else if(param == "recenter_mode") {
     if(tolower(val) == "rectangle")
       m_recenter_mode = "rectangle";
-    else 
+    else if(tolower(val) == "oval")
       m_recenter_mode = "oval";
+    else if(tolower(val) == "x")
+      m_recenter_mode = "x";
+    handled = true;
+  }
+  else if(param == "loiter_mode") {
+    if(tolower(val) == "vs")
+      m_loiter_mode = "vs";
+    else if(tolower(val) == "hg")
+      m_loiter_mode = "hg";
     handled = true;
   } 
   else
@@ -103,6 +110,11 @@ void BHV_Scout::onEveryState(string str)
     postWMessage("Mandatory Teammate name is null");
     return;
   }
+
+  if(m_last_recenter_time == 0) {
+    m_last_recenter_time = getBufferCurrTime();
+  }
+
   postOffboardMessage(m_tmate, "SWIMMER_ALERT", report);
 }
 
@@ -119,7 +131,7 @@ void BHV_Scout::onIdleState()
 
 IvPFunction* BHV_Scout::onRunState() 
 {
-    //m_curr_time = MOOSTime();
+    m_curr_time = getBufferCurrTime();
 
     // Get vehicle position
     bool ok1, ok2;
@@ -134,24 +146,18 @@ IvPFunction* BHV_Scout::onRunState()
   if (!m_pt_set) {
       updateScoutPath();
   }
-/*
-      // Handle 150-second rotation timer
-      if((m_curr_time - m_last_rotate_time) >= 150) {
-        rotateLoiter(m_total_rotation + 30.0);  // Continuous rotation[4]
-        m_last_rotate_time = m_curr_time;
-        postViewablePath();
-        m_total_rotation += 30.0; // Update total rotation[4]
-    }
 
-    // Handle 300-second recenter timer
-    if((m_curr_time - m_last_recenter_time) >= 270) {
+  // Uncomment for timer-based recentering ... still a little buggy:
+   /*
+    // Handle 90-second recenter timer
+    if((m_curr_time - m_last_recenter_time) >= 90) {
         recenterLoiter();
-        //rotateLoiter(-m_rotation_angle); // Reset rotation for new center[1]
-        //m_rotation_angle = 0;
+        m_total_rotation = m_total_rotation + 180;
+        rotateLoiter(m_total_rotation); 
         m_last_recenter_time = m_curr_time;
         vizRecenterMode();
     }
-*/
+   */
 
     // Check if we've reached current waypoint
     double dist = hypot((m_ptx-m_osx), (m_pty-m_osy));
@@ -163,13 +169,11 @@ IvPFunction* BHV_Scout::onRunState()
             m_current_waypoint = 0;
 
 
-        // No rotation at all to cover more new, areas in less time
-
-          // /*
+        // Uncomment for cycle-based recentering:
 
             recenterLoiter(); // Move to next oval point[7]
-
-          //*/
+            m_total_rotation = m_total_rotation + 180;
+            rotateLoiter(m_total_rotation);
         }
         
         // Update target waypoint
@@ -219,8 +223,10 @@ void BHV_Scout::updateScoutPath()
   double center_y = (min_y + max_y) / 2.0;
   double theta = 26 * M_PI / 180.0; // Angle for triangle points ... 26 deg
 
+  // Part 1: Calculate waypoints for recentering modes ... rectangle, oval, x
+
+  // Calculate rectangular recenter points:
   if(m_recenter_mode == "rectangle") {
-    // Generate rectangle vertices rotated 26° with 3/4 dimensions
     double rect_length = 0.65 * m_rescue_height;
     double rect_width = 0.40 * m_rescue_width;
     double theta = 26 * M_PI / 180.0;
@@ -244,7 +250,9 @@ void BHV_Scout::updateScoutPath()
     }
     vizRecenterMode();
   }
-  else {
+  
+  // Calculate oval recenter points:
+  else if (m_recenter_mode == "oval") {
     // Calculate oval dimensions
     double oval_length = 0.75 * m_rescue_height;
     double oval_height = 0.50 * m_rescue_width;
@@ -262,83 +270,167 @@ void BHV_Scout::updateScoutPath()
     vizRecenterMode(); 
   }
 
-  // Shift the starting center point to the top midpoint of the oval
-  m_waypoints.clear();
-  m_waypoints.push_back(m_recenter_points[0]); // Top midpoint of the oval
-  
-  // Calculate triangle dimensions - each will be 1/4 of region dimensions
-  double vs_center_x = m_recenter_points[0].x();
-  double vs_center_y = m_recenter_points[0].y();
-  double triangle_height = m_rescue_height / 8.0;
-  double triangle_width = m_rescue_width / 8.0;
-  
-  // Store information about the rescue region
-  postMessage("RESCUE_INFO", "width=" + doubleToStringX(m_rescue_width) + 
-              ",height=" + doubleToStringX(m_rescue_height) + 
-              ",center_x=" + doubleToStringX(center_x) + 
-              ",center_y=" + doubleToStringX(center_y));
-  
-  // Create waypoints vector
-  m_waypoints.clear();
-  XYPoint vs_center(vs_center_x, vs_center_y);
-  
-  // Calculate the three triangle points (all pointing downward)
-  // Center point is the bottom of all triangles
-  
-  // Top triangle points
-  double tlx = vs_center_x - triangle_width * cos(theta) + triangle_height * sin(theta);
-  double tly = vs_center_y - triangle_width * sin(theta) - triangle_height * cos(theta);
-  
-  double trx = vs_center_x + triangle_width * cos(theta) + triangle_height * sin(theta);
-  double try_ = vs_center_y + triangle_width * sin(theta) - triangle_height * cos(theta);
-  
-  // Middle triangle points (left and right)
-  double mlx = vs_center_x - 2 * triangle_width * cos(theta);
-  double mly = vs_center_y - 2 * triangle_width * sin(theta);
-  
-  double mrx = vs_center_x + 2 * triangle_width * cos(theta);
-  double mry = vs_center_y + 2 * triangle_width * sin(theta);
-  
-  // Bottom triangle points
-  double blx = vs_center_x - triangle_width * cos(theta) - triangle_height * sin(theta);
-  double bly = vs_center_y - triangle_width * sin(theta) + triangle_height * cos(theta);
-  
-  double brx = vs_center_x + triangle_width * cos(theta) - triangle_height * sin(theta);
-  double bry = vs_center_y + triangle_width * sin(theta) + triangle_height * cos(theta);
-  
-  // Create point objects for all vertices
-  XYPoint top_left(tlx, tly);
-  XYPoint top_right(trx, try_);
-  XYPoint middle_left(mlx, mly);
-  XYPoint middle_right(mrx, mry);
-  XYPoint bottom_left(blx, bly);
-  XYPoint bottom_right(brx, bry);
-  
-  // Define the Victor Sierra search pattern, always moving clockwise
-  // First triangle: Center → Top Left → Top Right → Center
-  m_waypoints.push_back(vs_center);       // Start at center
-  m_waypoints.push_back(bottom_left);     // Move to top left
-  m_waypoints.push_back(bottom_right);    // Move to top right
-  m_waypoints.push_back(vs_center);       // Back to center
-  
-  // Second triangle: Center → Bottom Right → Bottom Left → Center
-  m_waypoints.push_back(top_left); // Move to bottom left
-  m_waypoints.push_back(top_right);  // Move to middle left
-  m_waypoints.push_back(vs_center);       // Back to center
-  
-  /*
-  // Third triangle: Center → Middle Left → Middle Right → Center
-  m_waypoints.push_back(middle_left);  // Move to middle right
-  m_waypoints.push_back(top_left); // Move to bottom right
-  m_waypoints.push_back(vs_center);       // Back to center
-  */
+  // Calculate X recenter points:
+  else if(m_recenter_mode == "x") {
+    double x_length = 0.50 * m_rescue_height;
+    double x_width = 0.375 * m_rescue_width;
+    double theta = 26 * M_PI / 180.0;
+    
+    // Define 4 points: 4 corners
+    vector<XYPoint> corners = { 
+      {-x_length/2, x_width/2},  // NW corner (index 0)
+      {x_length/2, -x_width/2}, // SE corner (index 1)
+      {-x_length/2,  -x_width/2},  // SW corner (index 2)
+      {x_length/2,  x_width/2}  // NE corner (index 3)
+    };
 
-  // Initialize waypoint tracking
-  m_current_waypoint = 0;
-  m_ptx = m_waypoints[0].x();
-  m_pty = m_waypoints[0].y();
+    m_recenter_points.clear();
+    for(int i = 0; i <= 3; i++) {
+        // Apply rotation and translation to rescue center
+        double x = center_x + (corners[i].x()*cos(theta) - corners[i].y()*sin(theta));
+        double y = center_y + (corners[i].x()*sin(theta) + corners[i].y()*cos(theta));
+        m_recenter_points.push_back(XYPoint(x,y));
+    }
+    vizRecenterMode();
+  }
+
+  m_waypoints.clear();
+  m_waypoints.push_back(m_recenter_points[0]);
+
+  // Part 2: Calculate the triangular loiter pattern
+
+  // Save the center of the loiter pattern
+  double loiter_center_x = m_recenter_points[0].x();
+  double loiter_center_y = m_recenter_points[0].y();
+  XYPoint loiter_center(loiter_center_x, loiter_center_y);
+
+  // Hourglass loiter pattern:
+  if(m_loiter_mode == "hg") {
+    
+    // Calculate triangle dimensions
+    double triangle_height = 0.125 * m_rescue_height;
+    double triangle_width = 0.30 * m_rescue_width;
+    
+    // Store information about the rescue region
+    postMessage("RESCUE_INFO", "width=" + doubleToStringX(m_rescue_width) + 
+                ",height=" + doubleToStringX(m_rescue_height) + 
+                ",center_x=" + doubleToStringX(center_x) + 
+                ",center_y=" + doubleToStringX(center_y));
+    
+    // Create waypoints vector
+    m_waypoints.clear();
+    
+    // Calculate the two triangle's points
+    
+    // Top triangle points
+    double tlx = loiter_center_x - triangle_width * cos(theta) + triangle_height * sin(theta);
+    double tly = loiter_center_y - triangle_width * sin(theta) - triangle_height * cos(theta);
+    
+    double trx = loiter_center_x + triangle_width * cos(theta) + triangle_height * sin(theta);
+    double try_ = loiter_center_y + triangle_width * sin(theta) - triangle_height * cos(theta);
+    
+    // Bottom triangle points
+    double blx = loiter_center_x - triangle_width * cos(theta) - triangle_height * sin(theta);
+    double bly = loiter_center_y - triangle_width * sin(theta) + triangle_height * cos(theta);
+    
+    double brx = loiter_center_x + triangle_width * cos(theta) - triangle_height * sin(theta);
+    double bry = loiter_center_y + triangle_width * sin(theta) + triangle_height * cos(theta);
+    
+    // Create point objects for all vertices
+    XYPoint top_left(tlx, tly);
+    XYPoint top_right(trx, try_);
+    XYPoint bottom_left(blx, bly);
+    XYPoint bottom_right(brx, bry);
+    
+    // Define the Hourglass search pattern
+    // First triangle: Center → Bottom Left → Bottom Right → Center
+    m_waypoints.push_back(loiter_center);       // Start at center
+    m_waypoints.push_back(bottom_left);         // Move to bottom left
+    m_waypoints.push_back(bottom_right);        // Move to bottom right
+    m_waypoints.push_back(loiter_center);       // Back to center
+    
+    // Second triangle: Center → Top Left → Top Right → Center
+    m_waypoints.push_back(top_left);           // Move to top left
+    m_waypoints.push_back(top_right);          // Move to top right
+    m_waypoints.push_back(loiter_center);      // Back to center
+    
+    // Initialize waypoint tracking
+    m_current_waypoint = 0;
+    m_ptx = m_waypoints[0].x();
+    m_pty = m_waypoints[0].y();
+  }
+
+  // Victor Sierra loiter pattern:
+  else if(m_loiter_mode == "vs") {
+
+    // Calculate triangle dimensions
+    double triangle_height = 0.125 * m_rescue_height;
+    double triangle_width = 0.125 * m_rescue_width;
+    
+    // Store information about the rescue region
+    postMessage("RESCUE_INFO", "width=" + doubleToStringX(m_rescue_width) + 
+                ",height=" + doubleToStringX(m_rescue_height) + 
+                ",center_x=" + doubleToStringX(center_x) + 
+                ",center_y=" + doubleToStringX(center_y));
+    
+    // Create waypoints vector
+    m_waypoints.clear();
+    
+    // Calculate the three triangle's points
+    
+    // Top triangle points
+    double tlx = loiter_center_x - triangle_width * cos(theta) + triangle_height * sin(theta);
+    double tly = loiter_center_y - triangle_width * sin(theta) - triangle_height * cos(theta);
+    
+    double trx = loiter_center_x + triangle_width * cos(theta) + triangle_height * sin(theta);
+    double try_ = loiter_center_y + triangle_width * sin(theta) - triangle_height * cos(theta);
+    
+    // Middle triangle points (left and right)
+    double mlx = loiter_center_x - 2 * triangle_width * cos(theta);
+    double mly = loiter_center_y - 2 * triangle_width * sin(theta);
+    
+    double mrx = loiter_center_x + 2 * triangle_width * cos(theta);
+    double mry = loiter_center_y + 2 * triangle_width * sin(theta);
+    
+    // Bottom triangle points
+    double blx = loiter_center_x - triangle_width * cos(theta) - triangle_height * sin(theta);
+    double bly = loiter_center_y - triangle_width * sin(theta) + triangle_height * cos(theta);
+    
+    double brx = loiter_center_x + triangle_width * cos(theta) - triangle_height * sin(theta);
+    double bry = loiter_center_y + triangle_width * sin(theta) + triangle_height * cos(theta);
+    
+    // Create point objects for all vertices
+    XYPoint top_left(tlx, tly);
+    XYPoint top_right(trx, try_);
+    XYPoint middle_left(mlx, mly);
+    XYPoint middle_right(mrx, mry);
+    XYPoint bottom_left(blx, bly);
+    XYPoint bottom_right(brx, bry);
+    
+    // Define the Victor Sierra search pattern, always moving clockwise
+    // First triangle: Center → Top Left → Top Right → Center
+    m_waypoints.push_back(loiter_center);       // Start at center
+    m_waypoints.push_back(top_left);            // Move to top left
+    m_waypoints.push_back(top_right);           // Move to top right
+    m_waypoints.push_back(loiter_center);       // Back to center
+    
+    // Second triangle: Center → Bottom Right → Bottom Left → Center
+    m_waypoints.push_back(bottom_left);         // Move to bottom left
+    m_waypoints.push_back(middle_left);         // Move to middle left
+    m_waypoints.push_back(loiter_center);       // Back to center
+    
+    // Third triangle: Center → Middle Left → Middle Right → Center
+    m_waypoints.push_back(middle_right);        // Move to middle right
+    m_waypoints.push_back(bottom_right);        // Move to bottom right
+    m_waypoints.push_back(loiter_center);       // Back to center
+
+    // Initialize waypoint tracking
+    m_current_waypoint = 0;
+    m_ptx = m_waypoints[0].x();
+    m_pty = m_waypoints[0].y();
+  }
   
-  // Create a viewable path with track lines connecting all waypoints
+  // Part 3: Create a viewable path with track lines connecting all waypoints
   XYSegList seglist;
   for (unsigned int i=0; i < m_waypoints.size(); i++) {
     seglist.add_vertex(m_waypoints[i].x(), m_waypoints[i].y());
@@ -420,75 +512,145 @@ void BHV_Scout::recenterLoiter()
       postWMessage("Missing recenter points");
       return;
     }
-  } else if (m_recenter_mode == "oval") {
+  } 
+  else if (m_recenter_mode == "oval") {
     // Check if the recenter points are set correctly
     if (m_recenter_points.size() != 8) {
       postWMessage("Missing recenter points");
       return;
     }
+  } 
+  else if (m_recenter_mode == "x") {
+    // Check if the recenter points are set correctly
+    if (m_recenter_points.size() != 4) {
+      postWMessage("Missing recenter points");
+      return;
+    }
   }
 
-  // Update the center point to the next recenter point on the oval
+  // Part 1: Update the center point to the next recenter point 
   m_recenter_index = (m_recenter_index + 1) % m_recenter_points.size();
   XYPoint new_center = m_recenter_points[m_recenter_index];
 
   // Clear the waypoints and recalculate the triangular loiter pattern
   m_waypoints.clear();
 
-  double vs_center_x = new_center.x();
-  double vs_center_y = new_center.y();
-  double theta = 26 * M_PI / 180.0; // Angle for triangle alignment (26 degrees)
+  // Part 2: Re-calculate the triangular loiter pattern
 
-  // Dimensions for the triangles
-  double triangle_height = m_rescue_height / 8.0;
-  double triangle_width = m_rescue_width / 8.0;
+  // Save the center of the loiter pattern
+  double loiter_center_x = new_center.x();
+  double loiter_center_y = new_center.y();
+  double theta = 26 * M_PI / 180.0; // Angle for triangle points ... 26 deg
 
-  // Top triangle points
-  double tlx = vs_center_x - triangle_width * cos(theta) + triangle_height * sin(theta);
-  double tly = vs_center_y - triangle_width * sin(theta) - triangle_height * cos(theta);
-  
-  double trx = vs_center_x + triangle_width * cos(theta) + triangle_height * sin(theta);
-  double try_ = vs_center_y + triangle_width * sin(theta) - triangle_height * cos(theta);
-  
-  // Middle triangle points (left and right)
-  double mlx = vs_center_x - 2 * triangle_width * cos(theta);
-  double mly = vs_center_y - 2 * triangle_width * sin(theta);
-  
-  double mrx = vs_center_x + 2 * triangle_width * cos(theta);
-  double mry = vs_center_y + 2 * triangle_width * sin(theta);
-  
-  // Bottom triangle points
-  double blx = vs_center_x - triangle_width * cos(theta) - triangle_height * sin(theta);
-  double bly = vs_center_y - triangle_width * sin(theta) + triangle_height * cos(theta);
-  
-  double brx = vs_center_x + triangle_width * cos(theta) - triangle_height * sin(theta);
-  double bry = vs_center_y + triangle_width * sin(theta) + triangle_height * cos(theta);
-  
-  // Create point objects for all vertices
-  XYPoint vs_center(vs_center_x, vs_center_y);
-  XYPoint top_left(tlx, tly);
-  XYPoint top_right(trx, try_);
-  XYPoint middle_left(mlx, mly);
-  XYPoint middle_right(mrx, mry);
-  XYPoint bottom_left(blx, bly);
-  XYPoint bottom_right(brx, bry);
-  
-  // Define the Victor Sierra search pattern, always moving clockwise
-  // First triangle: Center → Top Left → Top Right → Center
-  m_waypoints.push_back(vs_center);       // Start at center
-  m_waypoints.push_back(bottom_left);     // Move to top left
-  m_waypoints.push_back(bottom_right);    // Move to top right
-  m_waypoints.push_back(vs_center);       // Back to center
-  
-  // Second triangle: Center → Bottom Right → Bottom Left → Center
-  m_waypoints.push_back(top_left); // Move to bottom left
-  m_waypoints.push_back(top_right);  // Move to middle left
-  m_waypoints.push_back(vs_center);       // Back to center
-  
-  // Reset waypoint tracking
-  m_current_waypoint = 0;
-  m_ptx = m_waypoints[0].x();
-  m_pty = m_waypoints[0].y();
+  // Hourglass loiter pattern:
+  if(m_loiter_mode == "hg") {
+    
+    // Calculate triangle dimensions
+    double triangle_height = 0.125 * m_rescue_height;
+    double triangle_width = 0.30 * m_rescue_width;
+    
+    // Calculate the two triangle's points
+    
+    // Top triangle points
+    double tlx = loiter_center_x - triangle_width * cos(theta) + triangle_height * sin(theta);
+    double tly = loiter_center_y - triangle_width * sin(theta) - triangle_height * cos(theta);
+    
+    double trx = loiter_center_x + triangle_width * cos(theta) + triangle_height * sin(theta);
+    double try_ = loiter_center_y + triangle_width * sin(theta) - triangle_height * cos(theta);
+
+    // Bottom triangle points
+    double blx = loiter_center_x - triangle_width * cos(theta) - triangle_height * sin(theta);
+    double bly = loiter_center_y - triangle_width * sin(theta) + triangle_height * cos(theta);
+    
+    double brx = loiter_center_x + triangle_width * cos(theta) - triangle_height * sin(theta);
+    double bry = loiter_center_y + triangle_width * sin(theta) + triangle_height * cos(theta);
+    
+    // Create point objects for all vertices
+    XYPoint loiter_center(loiter_center_x, loiter_center_y);
+    XYPoint top_left(tlx, tly);
+    XYPoint top_right(trx, try_);
+    XYPoint bottom_left(blx, bly);
+    XYPoint bottom_right(brx, bry);
+    
+    // Define the Hourglass search pattern
+    // First triangle: Center → Bottom Left → Bottom Right → Center
+    m_waypoints.push_back(loiter_center);       // Start at center
+    m_waypoints.push_back(bottom_left);         // Move to bottom left
+    m_waypoints.push_back(bottom_right);        // Move to bottom right
+    m_waypoints.push_back(loiter_center);       // Back to center
+    
+    // Second triangle: Center → Top Left → Top Right → Center
+    m_waypoints.push_back(top_left);           // Move to top left
+    m_waypoints.push_back(top_right);          // Move to top right
+    m_waypoints.push_back(loiter_center);      // Back to center
+    
+    // Initialize waypoint tracking
+    m_current_waypoint = 0;
+    m_ptx = m_waypoints[0].x();
+    m_pty = m_waypoints[0].y();
+  }
+
+  // Victor Sierra loiter pattern:
+  else if(m_loiter_mode == "vs") {
+
+    // Calculate triangle dimensions
+    double triangle_height = 0.125 * m_rescue_height;
+    double triangle_width = 0.125 * m_rescue_width;
+    
+    // Calculate the three triangle's points
+    
+    // Top triangle points
+    double tlx = loiter_center_x - triangle_width * cos(theta) + triangle_height * sin(theta);
+    double tly = loiter_center_y - triangle_width * sin(theta) - triangle_height * cos(theta);
+    
+    double trx = loiter_center_x + triangle_width * cos(theta) + triangle_height * sin(theta);
+    double try_ = loiter_center_y + triangle_width * sin(theta) - triangle_height * cos(theta);
+    
+    // Middle triangle points (left and right)
+    double mlx = loiter_center_x - 2 * triangle_width * cos(theta);
+    double mly = loiter_center_y - 2 * triangle_width * sin(theta);
+    
+    double mrx = loiter_center_x + 2 * triangle_width * cos(theta);
+    double mry = loiter_center_y + 2 * triangle_width * sin(theta);
+    
+    // Bottom triangle points
+    double blx = loiter_center_x - triangle_width * cos(theta) - triangle_height * sin(theta);
+    double bly = loiter_center_y - triangle_width * sin(theta) + triangle_height * cos(theta);
+    
+    double brx = loiter_center_x + triangle_width * cos(theta) - triangle_height * sin(theta);
+    double bry = loiter_center_y + triangle_width * sin(theta) + triangle_height * cos(theta);
+    
+    // Create point objects for all vertices
+    XYPoint loiter_center(loiter_center_x, loiter_center_y);
+    XYPoint top_left(tlx, tly);
+    XYPoint top_right(trx, try_);
+    XYPoint middle_left(mlx, mly);
+    XYPoint middle_right(mrx, mry);
+    XYPoint bottom_left(blx, bly);
+    XYPoint bottom_right(brx, bry);
+    
+    // Define the Victor Sierra search pattern, always moving clockwise
+    // First triangle: Center → Top Left → Top Right → Center
+    m_waypoints.push_back(loiter_center);       // Start at center
+    m_waypoints.push_back(top_left);            // Move to top left
+    m_waypoints.push_back(top_right);           // Move to top right
+    m_waypoints.push_back(loiter_center);       // Back to center
+    
+    // Second triangle: Center → Bottom Right → Bottom Left → Center
+    m_waypoints.push_back(bottom_left);         // Move to bottom left
+    m_waypoints.push_back(middle_left);         // Move to middle left
+    m_waypoints.push_back(loiter_center);       // Back to center
+    
+    // Third triangle: Center → Middle Left → Middle Right → Center
+    m_waypoints.push_back(middle_right);        // Move to middle right
+    m_waypoints.push_back(bottom_right);        // Move to bottom right
+    m_waypoints.push_back(loiter_center);       // Back to center
+
+    // Initialize waypoint tracking
+    m_current_waypoint = 0;
+    m_ptx = m_waypoints[0].x();
+    m_pty = m_waypoints[0].y();
+  }
 
   // Update the visualization
   postViewablePath();
@@ -556,12 +718,17 @@ void BHV_Scout::vizRecenterMode() {
     shape.set_color("edge", "dodger_blue");
     shape.set_label(m_us_name + "_recenter_rect"); 
   }
-  else {
+  else if(m_recenter_mode == "oval") {
     shape.add_vertex(m_recenter_points[0].x(), m_recenter_points[0].y());
-    shape.set_color("edge", "white");
+    shape.set_color("edge", "dodger_blue");
     shape.set_label(m_us_name + "_recenter_oval");
+  } 
+  else if(m_recenter_mode == "x") {
+    shape.add_vertex(m_recenter_points[0].x(), m_recenter_points[0].y());
+    shape.set_color("edge", "dodger_blue");
+    shape.set_label(m_us_name + "_recenter_x");
   }
-  
+
   postMessage("VIEW_SEGLIST", shape.get_spec());
 }
 

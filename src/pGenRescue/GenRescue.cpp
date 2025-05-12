@@ -50,7 +50,7 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
     bool   mstr  = msg.IsString();
 #endif
 
-    if(key == "SWIMMER_ALERT"){ 
+    if(key == "SWIMMER_ALERT" && (msg.GetCommunity() != m_enemy_rescuer && msg.GetCommunity() != m_enemy_scout)){ 
       PointReader point;
       point.intake(msg.GetString());
       bool new_swimmer = true;
@@ -75,7 +75,7 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
         m_first_swimmer_recieved = true;
       } 
 
-    } else if(key == "FOUND_SWIMMER"){
+    } else if(key == "FOUND_SWIMMER" && (msg.GetCommunity() != m_enemy_rescuer && msg.GetCommunity() != m_enemy_scout)){
       m_field_update = true; //Always true
       //Intakes found swimmer message data as a point
       PointReader found_point;
